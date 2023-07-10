@@ -1,0 +1,10 @@
+char_name,ability_name,ability_type,value
+Hook,Playing With Fire (A6 ability),ult_act,5
+Jing Yuan,Savant Providence (A4 ability),battle_start,15
+Sampo,Defensive Position (A4 ability),ult_act,10
+Serval,String Vibration (A4 ability),battle_start,15
+Tingyun,Jubilant Passage (A6 ability),turn,5
+Trailblazer (Destruction),Ready for Battle (A2 ability),battle_start,15
+Trailblazer (Preservation),Action Beats Overthinking (A6 ability),turn,5
+Welt,Judgment (A4 ability),ult_act,10
+Yukong,Majestas (A6 ability),yukong_majestas,2

@@ -95,9 +95,11 @@ def _dfs_rotation_calculation(stats: CharStats,
     stats.get_hit *= stats.energy_recharge
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
 
+    quid_pro_quo = None
     if user_input.light_cone == "Quid Pro Quo":
         quid_pro_quo = LIGHT_CONES.get("Quid Pro Quo")
-        quid_pro_quo_er_bonus = quid_pro_quo.superimpositions[user_input.superimposition]
+        if quid_pro_quo:
+            quid_pro_quo_er_bonus = quid_pro_quo.superimpositions[user_input.superimposition]
 
     if user_input.assume_ult:
         stats.init_energy += stats.ult_act * stats.energy_recharge

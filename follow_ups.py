@@ -1,7 +1,7 @@
 """Module for handling Follow-up attacks.
 
-This module provides functionality for reading Light Cones talents from a CSV file,
-storing them, as well as applying their bonuses."""
+This module provides functionality for reading Follow-up attacks from a CSV file,
+and storing them."""
 
 from dataclasses import dataclass
 from csv import DictReader
@@ -12,22 +12,22 @@ LIGHT_CONES_CSV = "data/follow_up_attacks.csv"
 
 @dataclass(frozen=True, slots=True)
 class FollowUPAttack:
-    """Dataclass that represents a Light Cone (LC).
+    """Dataclass that represents a Follow-up attack.
 
     Attributes:
         - char_name: Name of the character.
-        - energy_value: Amount of energy follow-up attack generates."""
+        - energy_value: Amount of energy the follow-up attack generates."""
 
     char_name: str
     energy_value: float
 
 
 def _read_follow_ups_attacks() -> dict[str, FollowUPAttack]:
-    """Reads the Light Cones from the CSV file and returns them as a dictionary.
+    """Reads the Follow-up attacks from the CSV file and returns them as a dictionary.
 
     Returns:
-        - Dictionary of LCs, where the keys are LC names,
-        and the values are LC objects."""
+        - Dictionary of Follow-up attacks, where the keys are character names,
+        and the values are FollowUPAttack objects."""
 
     with open(LIGHT_CONES_CSV, "r", encoding="utf-8") as file:
         follow_up_attacks: dict[str, FollowUPAttack] = {}

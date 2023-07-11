@@ -1,6 +1,6 @@
 """Module for handling Light Cones.
 
-This module provides functionality for reading Light Cones talents from a CSV file,
+This module provides functionality for reading Light Cones from a CSV file,
 storing them, as well as applying their bonuses."""
 
 from dataclasses import dataclass

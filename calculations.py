@@ -94,6 +94,7 @@ def _dfs_rotation_calculation(stats: CharStats,
     stats.kill *= stats.energy_recharge
     stats.get_hit *= stats.energy_recharge
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
+    kill_counter, hit_counter, relic_trigger_counter = 0, 0, 0
 
     quid_pro_quo = None
     if user_input.light_cone == "Quid Pro Quo":
@@ -124,22 +125,8 @@ def _dfs_rotation_calculation(stats: CharStats,
         if quid_pro_quo and current <= stats.ult_cost / 2:
             current += quid_pro_quo_er_bonus
 
-        turn_energy: float = 0
-
-        if user_input.num_kills == "every turn":
-            turn_energy += stats.kill
-        else:
-            current += user_input.num_kills * stats.kill
-
-        if user_input.num_hits_taken == "every turn":
-            turn_energy += stats.get_hit
-        else:
-            current += user_input.num_hits_taken * stats.get_hit
-
-        if user_input.num_relic_trigger == "every turn":
-            turn_energy += relic_energy
-        else:
-            current += user_input.num_relic_trigger * relic_energy
+        turn_energy = _calculate_turn_energy(stats, user_input, relic_energy,
+                                             kill_counter, hit_counter, relic_trigger_counter, current)
 
         stack.append((current + stats.basic + turn_energy, turns + ["BASIC"],
                      basic_count + 1, skill_count))
@@ -150,19 +137,49 @@ def _dfs_rotation_calculation(stats: CharStats,
     basic_rot = _find_basic_only_rotation(all_turns)
     skill_rot = _find_skill_only_rotation(all_turns)
 
-    # energy needed to decrease rotations by one
-    shorter_rot = basic_rot - 1 if basic_rot > 1 else 1
-    basic_er_threshold = round(
-        (1 / shorter_rot - stats.energy_recharge + 1) * 100, 3)
-    shorter_rot = skill_rot - 1 if skill_rot > 1 else 1
-    skill_er_threshold = round(
-        (1 / shorter_rot - stats.energy_recharge + 1) * 100, 3)
+    basic_er_threshold = calculate_energy_threshold(basic_rot, stats)
+    skill_er_threshold = calculate_energy_threshold(skill_rot, stats)
 
     one_skill_rotation = _find_one_skill_rotation(all_turns)
     best_rotation = _find_best_rotation(all_turns)
 
     return CalculationResults(basic_rot, basic_er_threshold, skill_rot,
                               skill_er_threshold, one_skill_rotation, best_rotation)
+
+
+def _calculate_turn_energy(stats: CharStats, user_input: UserInput,
+                           relic_energy: float, kill_counter: int, hit_counter: int,
+                           relic_trigger_counter: int, current: float) -> float:
+    """Calculates the energy consumed during each turn based on user inputs."""
+
+    turn_energy: float = 0
+
+    if user_input.num_kills == "every turn":
+        turn_energy += stats.kill
+    elif user_input.num_kills < kill_counter:
+        current += user_input.num_kills * stats.kill
+        kill_counter += 1
+
+    if user_input.num_hits_taken == "every turn":
+        turn_energy += stats.get_hit
+    elif user_input.num_hits_taken < hit_counter:
+        current += user_input.num_hits_taken * stats.get_hit
+        hit_counter += 1
+
+    if user_input.num_relic_trigger == "every turn":
+        turn_energy += relic_energy
+    elif user_input.num_relic_trigger < relic_trigger_counter:
+        current += user_input.num_relic_trigger * relic_energy
+        relic_trigger_counter += 1
+
+    return turn_energy
+
+
+def calculate_energy_threshold(rotation: int, stats: CharStats) -> float:
+    """Calculates the energy threshold required for a given rotation."""
+
+    shorter_rot = rotation - 1 if rotation > 1 else 1
+    return round((1 / shorter_rot - stats.energy_recharge + 1) * 100, 3)
 
 
 def _find_basic_only_rotation(lists_turns: list[list[str]]) -> int:

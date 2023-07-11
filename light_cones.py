@@ -87,7 +87,6 @@ def _read_light_cones() -> dict[str, LightCone]:
             path = row["path"]
             rarity = row["rarity"]
             is_event_reward = bool(row["is_event_reward"])
-
             recharge_type = row["recharge_type"]
 
             # Extract the superimposition levels from the columns

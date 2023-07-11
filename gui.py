@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QWidget,
                              QComboBox, QPushButton, QGridLayout,
                              QCheckBox, QLabel, QFormLayout, QStyle)
 from PyQt6.QtCore import Qt
+from follow_ups import FOLLOW_UP_ATTACKS
 from gui_utils import UserInput
 from characters import CharStats, CHARACTERS, SUPPORTED_CHARACTERS
 from talents import TALENTS
@@ -137,6 +138,7 @@ class MainWindowDemo(QDialog):
         rope = self.relic_layout.rope_selector.currentText()
 
         num_hits_taken = self._get_hits_taken()
+        num_follow_ups = self._get_num_follow_ups()
         num_kills = self._get_kills()
         num_ult_kills = self._get_ult_kills()
         assume_ult = self.extra_options_layout.assume_ult.checkbox.isChecked()
@@ -146,7 +148,7 @@ class MainWindowDemo(QDialog):
         return UserInput(char_name, eidolons, talent_level, ability,
                          light_cone, superimposition, relic,
                          num_relic_trigger, ornament, rope,
-                         num_hits_taken, num_kills, num_ult_kills,
+                         num_hits_taken, num_follow_ups, num_kills, num_ult_kills,
                          assume_ult, assume_tingyun_ult, assume_tingyun_e6)
 
     def _get_eidolons(self) -> int:
@@ -161,6 +163,17 @@ class MainWindowDemo(QDialog):
         try:
             return int(self.char_layout.talent_selector.currentText())
         except ValueError:
+            return 0
+
+    def _get_num_follow_ups(self) -> int | Literal["every turn"]:
+        """Returns the selected talent level."""
+        text = self.char_layout.follow_up_selector.currentText()
+        try:
+            return int(text)
+        except ValueError:
+            if text == "every turn":
+                return "every turn"
+
             return 0
 
     def _get_relic(self) -> Optional[Relic]:
@@ -244,10 +257,16 @@ class CharSelectorLayout(QGridLayout):
             parent, items=["--Talent Level--"] + [f"{i}" for i in range(1, 16)])
         self.talent_selector.setEnabled(False)
 
+        self.follow_up_selector = _CustomCombobox(
+            parent, items=["--Follow-up Attacks--", "every turn",
+                           "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+        self.follow_up_selector.setEnabled(False)
+
         self.addWidget(self.char_selector, 1, 0)
-        self.addWidget(self.eidolons_selector, 1, 1)
+        self.addWidget(self.eidolons_selector, 1, 1, 1, 2)
         self.addWidget(self.ability_selector, 2, 0)
         self.addWidget(self.talent_selector, 2, 1)
+        self.addWidget(self.follow_up_selector, 2, 2)
         self.addWidget(QWidget(), 3, 0)
 
     def _enable_options(self) -> None:
@@ -270,6 +289,9 @@ class CharSelectorLayout(QGridLayout):
 
         if TALENTS.get(char_name):
             self.talent_selector.setEnabled(True)
+
+        if FOLLOW_UP_ATTACKS.get(char_name):
+            self.follow_up_selector.setEnabled(True)
 
 
 @dataclass

@@ -35,6 +35,7 @@ class UserInput:
     ornament: str
     rope: str
     num_hits_taken: int | Literal["every turn"]
+    num_follow_ups: int | Literal["every turn"]
     num_kills: int | Literal["every turn"]
     num_ult_kills: int
     assume_ult: bool

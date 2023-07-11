@@ -25,6 +25,7 @@ from talents import apply_talents
 from abilities import apply_abilities
 from light_cones import LIGHT_CONES, apply_light_cone
 from relics import apply_ornament, apply_rope
+from follow_ups import FOLLOW_UP_ATTACKS
 
 
 def run_calculations(stats: CharStats, user_input: UserInput) -> None:
@@ -94,13 +95,18 @@ def _dfs_rotation_calculation(stats: CharStats,
     stats.kill *= stats.energy_recharge
     stats.get_hit *= stats.energy_recharge
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
-    kill_counter, hit_counter, relic_trigger_counter = 0, 0, 0
+    kill_counter, hit_counter, relic_trigger_counter, follow_up_counter = 0, 0, 0, 0
 
     quid_pro_quo = None
     if user_input.light_cone == "Quid Pro Quo":
         quid_pro_quo = LIGHT_CONES.get("Quid Pro Quo")
         if quid_pro_quo:
             quid_pro_quo_er_bonus = quid_pro_quo.superimpositions[user_input.superimposition]
+
+    follow_up_attack = None
+    follow_up_attack = FOLLOW_UP_ATTACKS.get(user_input.char_name)
+    if follow_up_attack:
+        follow_up_energy = follow_up_attack.energy_value
 
     if user_input.assume_ult:
         stats.init_energy += stats.ult_act * stats.energy_recharge
@@ -125,8 +131,9 @@ def _dfs_rotation_calculation(stats: CharStats,
         if quid_pro_quo and current <= stats.ult_cost / 2:
             current += quid_pro_quo_er_bonus
 
-        turn_energy = _calculate_turn_energy(stats, user_input, relic_energy,
-                                             kill_counter, hit_counter, relic_trigger_counter, current)
+        turn_energy = _calculate_turn_energy(stats, user_input, relic_energy, kill_counter,
+                                             hit_counter, relic_trigger_counter,
+                                             follow_up_energy, follow_up_counter)
 
         stack.append((current + stats.basic + turn_energy, turns + ["BASIC"],
                      basic_count + 1, skill_count))
@@ -137,8 +144,8 @@ def _dfs_rotation_calculation(stats: CharStats,
     basic_rot = _find_basic_only_rotation(all_turns)
     skill_rot = _find_skill_only_rotation(all_turns)
 
-    basic_er_threshold = calculate_energy_threshold(basic_rot, stats)
-    skill_er_threshold = calculate_energy_threshold(skill_rot, stats)
+    basic_er_threshold = _get_er_threshold(basic_rot, stats.energy_recharge)
+    skill_er_threshold = _get_er_threshold(skill_rot, stats.energy_recharge)
 
     one_skill_rotation = _find_one_skill_rotation(all_turns)
     best_rotation = _find_best_rotation(all_turns)
@@ -147,39 +154,46 @@ def _dfs_rotation_calculation(stats: CharStats,
                               skill_er_threshold, one_skill_rotation, best_rotation)
 
 
-def _calculate_turn_energy(stats: CharStats, user_input: UserInput,
-                           relic_energy: float, kill_counter: int, hit_counter: int,
-                           relic_trigger_counter: int, current: float) -> float:
+def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy: float,
+                           kill_counter: int, hit_counter: int, relic_trigger_counter: int,
+                           follow_up_energy: float, follow_up_counter: int) -> float:
     """Calculates the energy consumed during each turn based on user inputs."""
 
     turn_energy: float = 0
 
+    if follow_up_energy:
+        if user_input.num_follow_ups == "every turn":
+            turn_energy += follow_up_energy
+        elif follow_up_counter < user_input.num_follow_ups:
+            turn_energy += follow_up_energy
+            follow_up_counter += 1
+
     if user_input.num_kills == "every turn":
         turn_energy += stats.kill
-    elif user_input.num_kills < kill_counter:
-        current += user_input.num_kills * stats.kill
+    elif kill_counter < user_input.num_kills:
+        turn_energy += user_input.num_kills * stats.kill
         kill_counter += 1
 
     if user_input.num_hits_taken == "every turn":
         turn_energy += stats.get_hit
-    elif user_input.num_hits_taken < hit_counter:
-        current += user_input.num_hits_taken * stats.get_hit
+    elif hit_counter < user_input.num_hits_taken:
+        turn_energy += user_input.num_hits_taken * stats.get_hit
         hit_counter += 1
 
     if user_input.num_relic_trigger == "every turn":
         turn_energy += relic_energy
-    elif user_input.num_relic_trigger < relic_trigger_counter:
-        current += user_input.num_relic_trigger * relic_energy
+    elif relic_trigger_counter < user_input.num_relic_trigger:
+        turn_energy += user_input.num_relic_trigger * relic_energy
         relic_trigger_counter += 1
 
     return turn_energy
 
 
-def calculate_energy_threshold(rotation: int, stats: CharStats) -> float:
+def _get_er_threshold(rotation: int, energy_recharge: float) -> float:
     """Calculates the energy threshold required for a given rotation."""
 
     shorter_rot = rotation - 1 if rotation > 1 else 1
-    return round((1 / shorter_rot - stats.energy_recharge + 1) * 100, 3)
+    return round((1 / shorter_rot - energy_recharge + 1) * 100, 3)
 
 
 def _find_basic_only_rotation(lists_turns: list[list[str]]) -> int:
@@ -281,7 +295,7 @@ def _print_results(energy_recharge: float,
     energy_recharge = round(energy_recharge * 100, 3)
     char_info = f"{user_input.char_name} with {energy_recharge}% ER"
 
-    if user_input.light_cone != "--Select Light Cone--":
+    if LIGHT_CONES.get(user_input.light_cone):
         char_info += f" and S{user_input.superimposition + 1} {user_input.light_cone}"
 
     print(colored(char_info, "green"))

@@ -103,7 +103,7 @@ def _dfs_rotation_calculation(stats: CharStats,
         if quid_pro_quo:
             quid_pro_quo_er_bonus = quid_pro_quo.superimpositions[user_input.superimposition]
 
-    follow_up_attack = None
+    follow_up_energy: float = 0
     follow_up_attack = FOLLOW_UP_ATTACKS.get(user_input.char_name)
     if follow_up_attack:
         follow_up_energy = follow_up_attack.energy_value

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Literal, Optional
 from qdarktheme import setup_theme
 from darkdetect import isDark
+from PyQt6.QtWidgets import QComboBox
 from relics import Relic
 
 
@@ -41,3 +42,29 @@ def configure_theme(theme: Optional[str] = None) -> None:
                     additional_qss="QToolTip {color: black; font-size: 13px}")
     else:
         setup_theme("light", additional_qss="QToolTip {font-size: 13px}")
+
+
+def get_int_from_selector(selector: QComboBox) -> int:
+    """Helper function to get an integer value from a combobox."""
+
+    try:
+        return int(selector.currentText())
+    except ValueError:
+        return 0
+
+
+def get_int_or_literal_from_selector(selector: QComboBox) -> int | Literal["every turn"]:
+    """Helper function to get an integer value or a literal.
+
+    Returns:
+        - int | Literal["every turn"]"""
+
+    text = selector.currentText()
+
+    try:
+        return int(text)
+    except ValueError:
+        if text == "every turn":
+            return "every turn"
+
+        return 0

@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QWidget,
                              QComboBox, QPushButton, QGridLayout,
                              QCheckBox, QLabel, QFormLayout, QStyle)
 from PyQt6.QtCore import Qt
-from gui_utils import UserInput
+from gui_utils import UserInput, get_int_from_selector, get_int_or_literal_from_selector
 from characters import CharStats, CHARACTERS, SUPPORTED_CHARACTERS
 from eidolons import EIDOLONS
 from talents import TALENTS
@@ -153,75 +153,36 @@ class MainWindowDemo(QDialog):
 
     def _get_eidolons(self) -> int:
         """Returns the selected number of eidolons."""
-        try:
-            return int(self.char_layout.eidolons_selector.currentText())
-        except ValueError:
-            return 0
+        return get_int_from_selector(self.char_layout.eidolons_selector)
 
     def _get_talent_level(self) -> int:
         """Returns the selected talent level."""
-        try:
-            return int(self.char_layout.talent_selector.currentText())
-        except ValueError:
-            return 0
+        return get_int_from_selector(self.char_layout.talent_selector)
 
     def _get_relic(self) -> Optional[Relic]:
         """Returns the selected relic object."""
         relic_name = self.relic_layout.relic_selector.currentText()
-
         return ALL_RELICS.get(relic_name)
 
     def _get_relic_trigger(self) -> int | Literal["every turn"]:
         """Returns the selected number of relic triggers."""
-        text = self.relic_layout.relic_trigger_input.currentText()
-        try:
-            return int(text)
-        except ValueError:
-            if text == "every turn":
-                return "every turn"
-
-            return 0
+        return get_int_or_literal_from_selector(self.relic_layout.relic_trigger_input)
 
     def _get_hits_taken(self) -> int | Literal["every turn"]:
         """Returns the selected number of hits taken."""
-        text = self.extra_options_layout.hits_taken_input.currentText()
-        try:
-            return int(text)
-        except ValueError:
-            if text == "every turn":
-                return "every turn"
-
-            return 0
+        return get_int_or_literal_from_selector(self.extra_options_layout.hits_taken_input)
 
     def _get_num_follow_ups(self) -> int | Literal["every turn"]:
-        """Returns the selected talent level."""
-        text = self.char_layout.follow_up_selector.currentText()
-        try:
-            return int(text)
-        except ValueError:
-            if text == "every turn":
-                return "every turn"
-
-            return 0
+        """Returns the selected number of follow-up attacks."""
+        return get_int_or_literal_from_selector(self.char_layout.follow_up_selector)
 
     def _get_kills(self) -> int | Literal["every turn"]:
         """Returns the selected number of kills."""
-        text = self.extra_options_layout.kills_input.currentText()
-        try:
-            return int(text)
-        except ValueError:
-            if text == "every turn":
-                return "every turn"
-
-            return 0
+        return get_int_or_literal_from_selector(self.extra_options_layout.kills_input)
 
     def _get_ult_kills(self) -> int:
         """Returns the selected number of ult kills."""
-        text = self.extra_options_layout.ult_kills_input.currentText()
-        try:
-            return int(text)
-        except ValueError:
-            return 0
+        return get_int_from_selector(self.extra_options_layout.ult_kills_input)
 
 
 @dataclass

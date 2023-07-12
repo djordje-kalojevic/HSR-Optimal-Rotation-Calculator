@@ -45,28 +45,29 @@ def apply_light_cone(stats: CharStats, light_cone_name: str, superimposition: in
         return
 
     energy_value = light_cone.superimpositions[superimposition]
+    recharge_type = light_cone.recharge_type
 
-    if light_cone.recharge_type == "ER":
+    if recharge_type == "ER":
         stats.energy_recharge += energy_value
 
-    elif light_cone.recharge_type == "battle start":
+    elif recharge_type == "battle start":
         stats.init_energy += energy_value
 
-    elif light_cone.recharge_type == "attack":
+    elif recharge_type == "attack":
         stats.basic += energy_value
         stats.skill += energy_value
         stats.ult_act += energy_value
 
-    elif light_cone.recharge_type == "skill":
+    elif recharge_type == "skill":
         stats.skill += energy_value
 
-    elif light_cone.recharge_type == "attack or hit":
+    elif recharge_type == "attack or hit":
         stats.basic += energy_value
         stats.skill += energy_value
         stats.ult_act += energy_value
         stats.get_hit += energy_value
 
-    elif light_cone.recharge_type == "echoes_coffin":
+    elif recharge_type == "echoes_coffin":
         stats.basic += energy_value
         stats.ult_act += 2 * energy_value
 

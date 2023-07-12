@@ -23,9 +23,9 @@ from characters import CharStats
 from eidolons import apply_eidolons
 from talents import apply_talents
 from abilities import apply_abilities
+from follow_ups import FOLLOW_UP_ATTACKS
 from light_cones import LIGHT_CONES, apply_light_cone
 from relics import apply_ornament, apply_rope
-from follow_ups import FOLLOW_UP_ATTACKS
 
 
 def run_calculations(stats: CharStats, user_input: UserInput) -> None:
@@ -33,7 +33,6 @@ def run_calculations(stats: CharStats, user_input: UserInput) -> None:
     and prints their results to the console."""
 
     _apply_bonuses(stats, user_input)
-
     results = _dfs_rotation_calculation(stats, user_input)
 
     if results:
@@ -54,6 +53,19 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
 
     if user_input.assume_tingyun_ult and user_input.assume_tingyun_e6:
         stats.init_energy += 10
+
+    if user_input.assume_ult:
+        stats.init_energy += stats.ult_act * stats.energy_recharge
+
+    if user_input.num_ult_kills > 0:
+        stats.init_energy += (user_input.num_ult_kills *
+                              stats.ult_kill * stats.energy_recharge)
+
+    stats.energy_recharge /= 100
+    stats.basic *= stats.energy_recharge
+    stats.skill *= stats.energy_recharge
+    stats.kill *= stats.energy_recharge
+    stats.get_hit *= stats.energy_recharge
 
     apply_eidolons(stats, user_input.char_name, user_input.eidolons)
     apply_talents(stats, user_input.char_name, user_input.talent_level)
@@ -89,37 +101,23 @@ def _dfs_rotation_calculation(stats: CharStats,
     Positive rotations are defined as those that use more basic attacks than skills,
     as the former generate skill points, and the latter consume them."""
 
-    stats.energy_recharge /= 100
-    stats.basic *= stats.energy_recharge
-    stats.skill *= stats.energy_recharge
-    stats.kill *= stats.energy_recharge
-    stats.get_hit *= stats.energy_recharge
-    relic_energy = user_input.relic.recharge_value if user_input.relic else 0
-    kill_counter, hit_counter, relic_trigger_counter, follow_up_counter = 0, 0, 0, 0
-
-    quid_pro_quo = None
+    quid_pro_quo_bonus: float = 0
     if user_input.light_cone == "Quid Pro Quo":
         quid_pro_quo = LIGHT_CONES.get("Quid Pro Quo")
         if quid_pro_quo:
-            quid_pro_quo_er_bonus = quid_pro_quo.superimpositions[user_input.superimposition]
+            quid_pro_quo_bonus = quid_pro_quo.superimpositions[user_input.superimposition]
 
-    follow_up_energy: float = 0
     follow_up_attack = FOLLOW_UP_ATTACKS.get(user_input.char_name)
-    if follow_up_attack:
-        follow_up_energy = follow_up_attack.energy_value
+    follow_up_energy = follow_up_attack.energy_value if follow_up_attack else 0
 
-    if user_input.assume_ult:
-        stats.init_energy += stats.ult_act * stats.energy_recharge
-
-    if user_input.num_ult_kills > 0:
-        stats.init_energy += user_input.num_ult_kills * \
-            stats.ult_kill * stats.energy_recharge
+    relic_energy = user_input.relic.recharge_value if user_input.relic else 0
+    kill_counter, hit_counter, relic_trigger_counter, follow_up_counter = 0, 0, 0, 0
 
     needed_energy = stats.ult_cost - stats.init_energy
+    current = stats.init_energy
 
     stack: list = [(0, [], 0, 0)]
     all_turns: list[list[str]] = []
-    current = stats.init_energy
 
     while stack:
         current, turns, basic_count, skill_count = stack.pop()
@@ -129,7 +127,7 @@ def _dfs_rotation_calculation(stats: CharStats,
             continue
 
         if quid_pro_quo and current <= stats.ult_cost / 2:
-            current += quid_pro_quo_er_bonus
+            current += quid_pro_quo_bonus
 
         turn_energy = _calculate_turn_energy(stats, user_input, relic_energy, kill_counter,
                                              hit_counter, relic_trigger_counter,
@@ -157,7 +155,7 @@ def _dfs_rotation_calculation(stats: CharStats,
 def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy: float,
                            kill_counter: int, hit_counter: int, relic_trigger_counter: int,
                            follow_up_energy: float, follow_up_counter: int) -> float:
-    """Calculates the energy consumed during each turn based on user inputs."""
+    """Calculates the energy generated during each turn based on user inputs."""
 
     turn_energy: float = 0
 

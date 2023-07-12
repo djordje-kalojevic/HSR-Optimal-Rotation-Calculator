@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from csv import DictReader
 
 
-LIGHT_CONES_CSV = "data/follow_up_attacks.csv"
+FOLLOW_UP_ATTACKS_CSV = "data/follow_up_attacks.csv"
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,7 +29,7 @@ def _read_follow_ups_attacks() -> dict[str, FollowUPAttack]:
         - Dictionary of Follow-up attacks, where the keys are character names,
         and the values are FollowUPAttack objects."""
 
-    with open(LIGHT_CONES_CSV, "r", encoding="utf-8") as file:
+    with open(FOLLOW_UP_ATTACKS_CSV, "r", encoding="utf-8") as file:
         follow_up_attacks: dict[str, FollowUPAttack] = {}
 
         reader = DictReader(file)

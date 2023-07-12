@@ -11,11 +11,12 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QWidget,
                              QComboBox, QPushButton, QGridLayout,
                              QCheckBox, QLabel, QFormLayout, QStyle)
 from PyQt6.QtCore import Qt
-from follow_ups import FOLLOW_UP_ATTACKS
 from gui_utils import UserInput
 from characters import CharStats, CHARACTERS, SUPPORTED_CHARACTERS
+from eidolons import EIDOLONS
 from talents import TALENTS
 from abilities import ABILITIES
+from follow_ups import FOLLOW_UP_ATTACKS
 from light_cones import LIGHT_CONES, LIGHT_CONE_NAMES
 from relics import Relic, ALL_RELICS, RELICS, ORNAMENTS, ROPES
 from calculations import run_calculations
@@ -30,7 +31,6 @@ class MainWindowDemo(QDialog):
         self.setMinimumWidth(350)
         self.setWindowTitle("HSR Rotation Calculator Demo")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
-
         self.user_input = None
 
         self.setup_layout()
@@ -165,26 +165,11 @@ class MainWindowDemo(QDialog):
         except ValueError:
             return 0
 
-    def _get_num_follow_ups(self) -> int | Literal["every turn"]:
-        """Returns the selected talent level."""
-        text = self.char_layout.follow_up_selector.currentText()
-        try:
-            return int(text)
-        except ValueError:
-            if text == "every turn":
-                return "every turn"
-
-            return 0
-
     def _get_relic(self) -> Optional[Relic]:
         """Returns the selected relic object."""
         relic_name = self.relic_layout.relic_selector.currentText()
-        relic = ALL_RELICS.get(relic_name)
 
-        if relic:
-            return relic
-
-        return None
+        return ALL_RELICS.get(relic_name)
 
     def _get_relic_trigger(self) -> int | Literal["every turn"]:
         """Returns the selected number of relic triggers."""
@@ -200,6 +185,17 @@ class MainWindowDemo(QDialog):
     def _get_hits_taken(self) -> int | Literal["every turn"]:
         """Returns the selected number of hits taken."""
         text = self.extra_options_layout.hits_taken_input.currentText()
+        try:
+            return int(text)
+        except ValueError:
+            if text == "every turn":
+                return "every turn"
+
+            return 0
+
+    def _get_num_follow_ups(self) -> int | Literal["every turn"]:
+        """Returns the selected talent level."""
+        text = self.char_layout.follow_up_selector.currentText()
         try:
             return int(text)
         except ValueError:
@@ -231,7 +227,7 @@ class MainWindowDemo(QDialog):
 @dataclass
 class CharSelectorLayout(QGridLayout):
     """Layout which is responsible for input of all parameters related to characters,
-    i.e., their name, eidolons, talents, and abilities."""
+    i.e., their name, eidolons, talents, abilities, and follow-up attacks."""
 
     def __init__(self, parent: MainWindowDemo):
         super().__init__()
@@ -273,25 +269,31 @@ class CharSelectorLayout(QGridLayout):
         char_name = self.char_selector.currentText()
 
         self.eidolons_selector.setEnabled(True)
-        ability_names = ["--Character Ability--"] + [
-            a.ability_name for a in ABILITIES.values()
-            if a.char_name == char_name]
-
-        # if ABILITIES.get(char_name):
+        ability_names = (["--Character Ability--"] + [a.name for a in ABILITIES.values()
+                                                      if a.char_name == char_name])
         if len(ability_names) > 1:
             self.ability_selector.setEnabled(True)
             self.ability_selector.clear()
             self.ability_selector.addItems(ability_names)
-            ability_names = []
+
         else:
             self.ability_selector.setEnabled(False)
             self.ability_selector.setPlaceholderText("--Character Ability--")
 
+        if [e for e in EIDOLONS if e.char_name == char_name]:
+            self.eidolons_selector.setEnabled(True)
+        else:
+            self.eidolons_selector.setEnabled(False)
+
         if TALENTS.get(char_name):
             self.talent_selector.setEnabled(True)
+        else:
+            self.talent_selector.setEnabled(False)
 
         if FOLLOW_UP_ATTACKS.get(char_name):
             self.follow_up_selector.setEnabled(True)
+        else:
+            self.follow_up_selector.setEnabled(False)
 
 
 @dataclass

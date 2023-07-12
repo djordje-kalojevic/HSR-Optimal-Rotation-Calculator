@@ -17,42 +17,42 @@ class Ability:
 
     Attributes:
         - char_name: Name of the character.
-        - ability_name: Name of the ability.
-        - ability_type: Type of the bonus ability provides.
+        - name: Name of the ability.
+        - type: Type of the bonus ability provides.
         - value_bonus: Value of the bonus the ability provides."""
 
     char_name: str
-    ability_name: str
-    ability_type: str
+    name: str
+    type: str
     value_bonus: int
 
 
-def apply_abilities(stats: CharStats, ability_name: str = "") -> None:
+def apply_abilities(stats: CharStats, name: str = "") -> None:
     """Applies ability bonuses to the character's stats.
 
     Args:
         - stats: Character's stats to be modified.
-        - ability_name: Name of the ability."""
+        - name: Name of the ability."""
 
-    ability = ABILITIES.get(ability_name)
+    ability = ABILITIES.get(name)
 
     if not ability:
         return
 
     value_bonus = ability.value_bonus
-    ability_type = ability.ability_type
+    type = ability.type
 
-    if ability_type == "battle_start":
+    if type == "battle_start":
         stats.init_energy += value_bonus
 
-    elif ability_type == "turn":
+    elif type == "turn":
         stats.basic += value_bonus
         stats.skill += value_bonus
 
-    elif ability_type == "ult_act":
+    elif type == "ult_act":
         stats.ult_act += value_bonus
 
-    elif ability_type == "yukong_majestas":
+    elif type == "yukong_majestas":
         stats.skill += 2 * value_bonus
 
 
@@ -69,13 +69,13 @@ def _read_abilities() -> dict[str, Ability]:
         reader = DictReader(file)
         for row in reader:
             char_name = row["char_name"]
-            ability_name = row["ability_name"]
-            ability_type = row["ability_type"]
+            name = row["ability_name"]
+            type = row["ability_type"]
             value_bonus = int(row["value"])
 
-            ability = Ability(char_name, ability_name,
-                              ability_type, value_bonus)
-            abilities[ability_name] = ability
+            ability = Ability(char_name, name,
+                              type, value_bonus)
+            abilities[name] = ability
 
     return abilities
 

@@ -84,9 +84,7 @@ class MainWindowDemo(QDialog):
         and the combobox will be disabled."""
 
         selected_character = self.char_layout.char_selector.currentText()
-        char = CHARACTERS.get(selected_character)
-        if not char:
-            return
+        char = CHARACTERS[selected_character]
         char_path = char.path
         lcs = [lc.name for lc in LIGHT_CONES.values() if lc.path == char_path]
         self.lc_layout.lc_selector.clear()

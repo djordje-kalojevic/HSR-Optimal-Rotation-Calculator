@@ -61,12 +61,6 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
         stats.init_energy += (user_input.num_ult_kills *
                               stats.ult_kill * stats.energy_recharge)
 
-    stats.energy_recharge /= 100
-    stats.basic *= stats.energy_recharge
-    stats.skill *= stats.energy_recharge
-    stats.kill *= stats.energy_recharge
-    stats.get_hit *= stats.energy_recharge
-
     apply_eidolons(stats, user_input.char_name, user_input.eidolons)
     apply_talents(stats, user_input.char_name, user_input.talent_level)
     apply_abilities(stats, user_input.ability)
@@ -101,14 +95,14 @@ def _dfs_rotation_calculation(stats: CharStats,
     Positive rotations are defined as those that use more basic attacks than skills,
     as the former generate skill points, and the latter consume them."""
 
-    quid_pro_quo_bonus: float = 0
-    if user_input.light_cone == "Quid Pro Quo":
-        quid_pro_quo = LIGHT_CONES.get("Quid Pro Quo")
-        if quid_pro_quo:
-            quid_pro_quo_bonus = quid_pro_quo.superimpositions[user_input.superimposition]
+    stats.energy_recharge /= 100
+    stats.basic *= stats.energy_recharge
+    stats.skill *= stats.energy_recharge
+    stats.kill *= stats.energy_recharge
+    stats.get_hit *= stats.energy_recharge
 
-    follow_up_attack = FOLLOW_UP_ATTACKS.get(user_input.char_name)
-    follow_up_energy = follow_up_attack.energy_value if follow_up_attack else 0
+    quid_pro_quo_bonus = _quid_pro_quo_check(user_input)
+    follow_up_energy = _follow_up_attack_check(user_input)
 
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
     kill_counter, hit_counter, relic_trigger_counter, follow_up_counter = 0, 0, 0, 0
@@ -126,7 +120,7 @@ def _dfs_rotation_calculation(stats: CharStats,
             all_turns.append(turns)
             continue
 
-        if quid_pro_quo and current <= stats.ult_cost / 2:
+        if quid_pro_quo_bonus and current <= stats.ult_cost / 2:
             current += quid_pro_quo_bonus
 
         turn_energy = _calculate_turn_energy(stats, user_input, relic_energy, kill_counter,
@@ -140,16 +134,35 @@ def _dfs_rotation_calculation(stats: CharStats,
                       basic_count, skill_count + 1))
 
     basic_rot = _find_basic_only_rotation(all_turns)
-    skill_rot = _find_skill_only_rotation(all_turns)
-
     basic_er_threshold = _get_er_threshold(basic_rot, stats.energy_recharge)
-    skill_er_threshold = _get_er_threshold(skill_rot, stats.energy_recharge)
-
     one_skill_rotation = _find_one_skill_rotation(all_turns)
+
+    skill_rot = _find_skill_only_rotation(all_turns)
+    skill_er_threshold = _get_er_threshold(skill_rot, stats.energy_recharge)
     best_rotation = _find_best_rotation(all_turns)
 
     return CalculationResults(basic_rot, basic_er_threshold, skill_rot,
                               skill_er_threshold, one_skill_rotation, best_rotation)
+
+
+def _follow_up_attack_check(user_input: UserInput) -> float:
+    """Checks whether this character character has follow-up attacks,
+    if so returns the bonus energy they generate."""
+
+    follow_up_attack = FOLLOW_UP_ATTACKS.get(user_input.char_name)
+    follow_up_energy = follow_up_attack.energy_value if follow_up_attack else 0
+
+    return follow_up_energy
+
+
+def _quid_pro_quo_check(user_input: UserInput) -> float:
+    """Checks whether the QPQ Light Cone is equipped,
+    if so returns the it's bonus value, else it returns 0."""
+
+    if not user_input.light_cone == "Quid Pro Quo":
+        return 0
+
+    return LIGHT_CONES["Quid Pro Quo"].superimpositions[user_input.superimposition - 1]
 
 
 def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy: float,
@@ -159,12 +172,11 @@ def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy
 
     turn_energy: float = 0
 
-    if follow_up_energy:
-        if user_input.num_follow_ups == "every turn":
-            turn_energy += follow_up_energy
-        elif follow_up_counter < user_input.num_follow_ups:
-            turn_energy += follow_up_energy
-            follow_up_counter += 1
+    if user_input.num_follow_ups == "every turn":
+        turn_energy += follow_up_energy
+    elif follow_up_counter < user_input.num_follow_ups:
+        turn_energy += follow_up_energy
+        follow_up_counter += 1
 
     if user_input.num_kills == "every turn":
         turn_energy += stats.kill

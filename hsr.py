@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QApplication
 from gui import MainWindowDemo
 from gui_utils import configure_theme
 
+
 def main() -> None:
     """Calculator's main function which incorporates the GUI, as well as all the calculations."""
 

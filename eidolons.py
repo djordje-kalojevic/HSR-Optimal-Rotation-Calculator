@@ -1,6 +1,6 @@
-"""Module for handling character eidolons.
+"""Module for handling character Eidolons.
 
-This module provides functionality for reading character eidolons from a CSV file,
+This module provides functionality for reading character Eidolons from a CSV file,
 storing them, as well as applying their bonuses."""
 
 from dataclasses import dataclass
@@ -13,13 +13,13 @@ EIDOLONS_CSV = "data/eidolons.csv"
 
 @dataclass(frozen=True, slots=True)
 class Eidolon:
-    """Dataclass that represents a character's eidolon.
+    """Dataclass that represents a character's Eidolon.
 
     Attributes:
         - char_name: Name of the character.
-        - eidolon_level: Level of the eidolon.
-        - eidolon_type: Type of the bonus eidolon provides.
-        - energy_value: Amount of energy relic provides."""
+        - eidolon_level: Level of the Eidolon.
+        - eidolon_type: Type of the bonus Eidolon provides.
+        - energy_value: Amount of energy or energy recharge Eidolon provides."""
 
     char_name: str
     eidolon_level: int
@@ -28,12 +28,12 @@ class Eidolon:
 
 
 def apply_eidolons(stats: CharStats, char_name: str, eidolon_level: int) -> None:
-    """Applies eidolon bonuses to the character's stats.
+    """Applies Eidolon bonuses to the character's stats.
 
     Args:
         - stats: Character's stats to be modified.
         - char_name: Name of the character.
-        - eidolon_level: Level of the eidolon to be applied."""
+        - eidolon_level: Level of the Eidolon to be applied."""
 
     if eidolon_level == 0:
         return
@@ -80,10 +80,10 @@ def apply_eidolons(stats: CharStats, char_name: str, eidolon_level: int) -> None
 
 
 def _read_eidolons() -> list[Eidolon]:
-    """Reads the eidolons from the CSV file and returns them as a list.
+    """Reads the Eidolons from the CSV file and returns them as a list.
 
     Returns:
-        - List of eidolons"""
+        - List of Eidolons"""
 
     with open(EIDOLONS_CSV, "r", encoding="utf-8") as file:
         eidolons: list[Eidolon] = []

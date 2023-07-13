@@ -101,8 +101,9 @@ def _dfs_rotation_calculation(stats: CharStats,
     stats.kill *= stats.energy_recharge
     stats.get_hit *= stats.energy_recharge
 
-    quid_pro_quo_bonus = _quid_pro_quo_check(user_input)
-    follow_up_energy = _follow_up_attack_check(user_input)
+    quid_pro_quo_bonus = _quid_pro_quo_check(
+        user_input.light_cone, user_input.superimposition)
+    follow_up_energy = _follow_up_attack_check(user_input.char_name)
 
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
     kill_counter, hit_counter, relic_trigger_counter, follow_up_counter = 0, 0, 0, 0
@@ -145,24 +146,22 @@ def _dfs_rotation_calculation(stats: CharStats,
                               skill_er_threshold, one_skill_rotation, best_rotation)
 
 
-def _follow_up_attack_check(user_input: UserInput) -> float:
+def _follow_up_attack_check(char_name: str) -> float:
     """Checks whether this character character has follow-up attacks,
     if so returns the bonus energy they generate."""
 
-    follow_up_attack = FOLLOW_UP_ATTACKS.get(user_input.char_name)
-    follow_up_energy = follow_up_attack.energy_value if follow_up_attack else 0
-
-    return follow_up_energy
+    follow_up_attack = FOLLOW_UP_ATTACKS.get(char_name)
+    return follow_up_attack.energy_value if follow_up_attack else 0
 
 
-def _quid_pro_quo_check(user_input: UserInput) -> float:
+def _quid_pro_quo_check(light_cone: str, superimposition: int) -> float:
     """Checks whether the QPQ Light Cone is equipped,
     if so returns the it's bonus value, else it returns 0."""
 
-    if not user_input.light_cone == "Quid Pro Quo":
+    if not light_cone == "Quid Pro Quo":
         return 0
 
-    return LIGHT_CONES["Quid Pro Quo"].superimpositions[user_input.superimposition - 1]
+    return LIGHT_CONES["Quid Pro Quo"].superimpositions[superimposition]
 
 
 def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy: float,

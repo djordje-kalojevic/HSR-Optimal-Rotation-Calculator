@@ -195,7 +195,7 @@ def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy
         turn_energy += user_input.num_relic_trigger * relic_energy
         relic_trigger_counter += 1
 
-    return turn_energy
+    return turn_energy * stats.energy_recharge
 
 
 def _get_er_threshold(rotation: int, energy_recharge: float) -> float:

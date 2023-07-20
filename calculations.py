@@ -36,16 +36,23 @@ def run_calculations(stats: CharStats, user_input: UserInput) -> None:
     results = _dfs_rotation_calculation(stats, user_input)
 
     if results:
-        _print_results(stats.energy_recharge, user_input, results)
+        if user_input.char_name == "Blade":
+            _print_results_blade(stats.energy_recharge, user_input, results)
+
+        else:
+            _print_results(stats.energy_recharge, user_input, results)
 
 
 def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
     """Applies all user-selected bonuses."""
 
-    if user_input.char_name == "Clara":
+    if user_input.char_name == "Blade":
+        stats.skill = stats.basic + 10
+
+    elif user_input.char_name == "Clara":
         stats.get_hit += 5
 
-    if user_input.char_name == "Trailblazer (Preservation)":
+    elif user_input.char_name == "Trailblazer (Preservation)":
         stats.ult_act += 10
 
     if user_input.assume_tingyun_ult:
@@ -318,3 +325,19 @@ def _print_results(energy_recharge: float,
         print(f"One skill rotation: {results.one_skill_rotation}")
 
     print(f"Most optimal rotation: {results.best_rotation}\n")
+
+
+def _print_results_blade(energy_recharge: float,
+                         user_input: UserInput, results: CalculationResults) -> None:
+    energy_recharge = round(energy_recharge * 100, 3)
+    char_info = f"{user_input.char_name} with {energy_recharge}% ER"
+
+    if LIGHT_CONES.get(user_input.light_cone):
+        char_info += f" and S{user_input.superimposition + 1} {user_input.light_cone}"
+
+    print(colored(char_info, "green"))
+
+    print(f"Basic rotation: {results.basic_rot} x BASIC")
+    print(f"ER needed for the next breakpoint: {results.basic_er_threshold}%")
+    print(f"Enchanted Basic rotation: {results.skill_rot} x SKILL")
+    print(f"ER needed for the next breakpoint: {results.skill_er_threshold}%")

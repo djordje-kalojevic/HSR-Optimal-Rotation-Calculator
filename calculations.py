@@ -339,5 +339,5 @@ def _print_results_blade(energy_recharge: float,
 
     print(f"Basic rotation: {results.basic_rot} x BASIC")
     print(f"ER needed for the next breakpoint: {results.basic_er_threshold}%")
-    print(f"Enchanted Basic rotation: {results.skill_rot} x SKILL")
+    print(f"Enchanted Basic rotation: {results.skill_rot} x Enchanted Basics")
     print(f"ER needed for the next breakpoint: {results.skill_er_threshold}%")

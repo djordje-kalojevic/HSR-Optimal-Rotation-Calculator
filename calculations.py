@@ -138,7 +138,6 @@ def _dfs_rotation_calculation(stats: CharStats,
                               skill_er_threshold, one_skill_rotation, best_rotation)
 
 
-#! fix this, counters are always reset
 def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy: float,
                            follow_up_energy: float, counters: Counters) -> float:
     """Calculates the energy generated during each turn based on user inputs."""

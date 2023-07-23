@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Optional
-
 from termcolor import colored
 from follow_ups import FOLLOW_UP_ATTACKS
 from gui_utils import UserInput

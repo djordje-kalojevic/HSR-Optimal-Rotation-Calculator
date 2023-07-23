@@ -66,11 +66,11 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
         stats.init_energy += 10
 
     if user_input.assume_ult:
-        stats.init_energy += stats.ult_act * stats.energy_recharge
+        stats.init_energy += stats.ult_act * stats.energy_recharge / 100
 
     if user_input.num_ult_kills > 0:
         stats.init_energy += (user_input.num_ult_kills *
-                              stats.ult_kill * stats.energy_recharge)
+                              stats.ult_kill * stats.energy_recharge / 100)
 
     apply_eidolons(stats, user_input.char_name, user_input.eidolons)
     apply_talents(stats, user_input.char_name, user_input.talent_level)

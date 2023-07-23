@@ -66,11 +66,11 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
         stats.init_energy += 10
 
     if user_input.assume_ult:
-        stats.init_energy += stats.ult_act * stats.energy_recharge / 100
+        stats.init_energy += stats.ult_act * stats.energy_recharge
 
     if user_input.num_ult_kills > 0:
         stats.init_energy += (user_input.num_ult_kills *
-                              stats.ult_kill * stats.energy_recharge / 100)
+                              stats.ult_kill * stats.energy_recharge)
 
     apply_eidolons(stats, user_input.char_name, user_input.eidolons)
     apply_talents(stats, user_input.char_name, user_input.talent_level)
@@ -88,11 +88,8 @@ def _dfs_rotation_calculation(stats: CharStats,
     Positive rotations are defined as those that use more basic attacks than skills,
     as the former generate skill points, and the latter consume them."""
 
-    stats.energy_recharge /= 100
     stats.basic *= stats.energy_recharge
     stats.skill *= stats.energy_recharge
-    stats.kill *= stats.energy_recharge
-    stats.get_hit *= stats.energy_recharge
 
     quid_pro_quo_bonus = quid_pro_quo_check(
         user_input.light_cone, user_input.superimposition)

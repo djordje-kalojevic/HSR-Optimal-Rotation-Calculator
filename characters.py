@@ -16,7 +16,7 @@ class CharStats:
     """Contains default character values, relating to energy generation."""
 
     ult_cost: float
-    energy_recharge: float = 100
+    energy_recharge: float = 1
     basic: float = 20
     skill: float = 30
     get_hit: float = 10

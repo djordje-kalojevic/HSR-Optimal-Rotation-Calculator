@@ -52,7 +52,7 @@ def apply_eidolons(stats: CharStats, char_name: str, eidolon_level: int) -> None
             stats.skill += energy_value
 
         elif eidolon_type == "energy_recharge":
-            stats.energy_recharge += energy_value
+            stats.energy_recharge += energy_value / 100
 
         elif eidolon_type == "lightning_lord":
             stats.skill += 2 * energy_value

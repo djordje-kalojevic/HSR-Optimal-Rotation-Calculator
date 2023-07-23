@@ -48,7 +48,7 @@ def apply_light_cone(stats: CharStats, light_cone_name: str, superimposition: in
     recharge_type = light_cone.recharge_type
 
     if recharge_type == "ER":
-        stats.energy_recharge += energy_value
+        stats.energy_recharge += energy_value / 100
 
     elif recharge_type == "battle start":
         stats.init_energy += energy_value

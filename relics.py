@@ -37,7 +37,7 @@ def apply_rope(stats: CharStats, rope_rarity: str):
     rope = ALL_RELICS.get(rope_rarity)
 
     if rope:
-        stats.energy_recharge += rope.recharge_value
+        stats.energy_recharge += rope.recharge_value / 100
 
 
 def apply_ornament(stats: CharStats, ornament_name: str):
@@ -50,7 +50,7 @@ def apply_ornament(stats: CharStats, ornament_name: str):
     ornament = ALL_RELICS.get(ornament_name)
 
     if ornament:
-        stats.energy_recharge += ornament.recharge_value
+        stats.energy_recharge += ornament.recharge_value / 100
 
 
 def _read_relics() -> dict[str, Relic]:

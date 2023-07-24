@@ -71,6 +71,9 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
     if user_input.num_ult_kills > 0:
         stats.init_energy += (user_input.num_ult_kills *
                               stats.ult_kill * stats.energy_recharge)
+    
+    stats.basic *= stats.energy_recharge
+    stats.skill *= stats.energy_recharge
 
     apply_eidolons(stats, user_input.char_name, user_input.eidolons)
     apply_talents(stats, user_input.char_name, user_input.talent_level)
@@ -81,15 +84,13 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
     apply_ornament(stats, user_input.ornament)
 
 
+
 def _dfs_rotation_calculation(stats: CharStats,
                               user_input: UserInput) -> Optional[CalculationResults]:
     """Depth-first search algorithm that determines
     the shortest and most skill-point positive rotation.
     Positive rotations are defined as those that use more basic attacks than skills,
     as the former generate skill points, and the latter consume them."""
-
-    stats.basic *= stats.energy_recharge
-    stats.skill *= stats.energy_recharge
 
     quid_pro_quo_bonus = quid_pro_quo_check(
         user_input.light_cone, user_input.superimposition)
@@ -101,11 +102,11 @@ def _dfs_rotation_calculation(stats: CharStats,
     needed_energy = stats.ult_cost - stats.init_energy
     current = stats.init_energy
 
-    stack: list = [(0, [], 0, 0)]
+    stack: list = [(0, [])]
     all_turns: list[list[str]] = []
 
     while stack:
-        current, turns, basic_count, skill_count = stack.pop()
+        current, turns = stack.pop()
 
         if round(current) >= needed_energy:
             all_turns.append(turns)
@@ -117,11 +118,8 @@ def _dfs_rotation_calculation(stats: CharStats,
         turn_energy = _calculate_turn_energy(
             stats, user_input, relic_energy, follow_up_energy, counters)
 
-        stack.append((current + stats.basic + turn_energy, turns + ["BASIC"],
-                     basic_count + 1, skill_count))
-
-        stack.append((current + stats.skill + turn_energy, turns + ["SKILL"],
-                      basic_count, skill_count + 1))
+        stack.append((current + stats.basic + turn_energy, turns + ["BASIC"]))
+        stack.append((current + stats.skill + turn_energy, turns + ["SKILL"]))
 
     basic_rot = find_basic_only_rotation(all_turns)
     basic_er_threshold = get_er_threshold(basic_rot, stats.energy_recharge)

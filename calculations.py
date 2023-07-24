@@ -143,24 +143,24 @@ def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy
         turn_energy += follow_up_energy
     elif counters.follow_up_counter < user_input.num_follow_ups:
         turn_energy += follow_up_energy
-        counters.follow_up_counter += 1
+        counters.follow_up_counter = user_input.num_follow_ups
 
     if user_input.num_kills == "every turn":
         turn_energy += stats.kill
     elif counters.kill_counter < user_input.num_kills:
         turn_energy += user_input.num_kills * stats.kill
-        counters.kill_counter += 1
+        counters.kill_counter = user_input.num_kills
 
     if user_input.num_hits_taken == "every turn":
         turn_energy += stats.get_hit
     elif counters.hit_counter < user_input.num_hits_taken:
         turn_energy += user_input.num_hits_taken * stats.get_hit
-        counters.hit_counter += 1
+        counters.hit_counter = user_input.num_hits_taken
 
     if user_input.num_relic_trigger == "every turn":
         turn_energy += relic_energy
     elif counters.relic_trigger_counter < user_input.num_relic_trigger:
         turn_energy += user_input.num_relic_trigger * relic_energy
-        counters.relic_trigger_counter += 1
+        counters.relic_trigger_counter = user_input.num_relic_trigger
 
     return turn_energy * stats.energy_recharge

@@ -127,23 +127,19 @@ def _order_rotation_turns(rotation: list[str]) -> str:
 
     skill_count = rotation.count("SKILL")
     basic_count = rotation.count("BASIC")
-
-    if skill_count == 0:
-        return f"{basic_count} x BASIC" if basic_count > 1 else "BASIC"
-
-    if basic_count == 0:
-        return f"{skill_count} x SKILL" if skill_count > 1 else "SKILL"
-
-    if skill_count > 1 and basic_count > 1:
-        return f"{skill_count} x SKILL > {basic_count} x BASIC"
+    turns = []
 
     if skill_count > 1:
-        return f"{skill_count} x SKILL > BASIC"
+        turns.append(f"{skill_count} x SKILL")
+    elif skill_count == 1:
+        turns.append("SKILL")
 
     if basic_count > 1:
-        return f"SKILL > {basic_count} x BASIC"
+        turns.append(f"{basic_count} x BASIC")
+    elif basic_count == 1:
+        turns.append("BASIC")
 
-    return "SKILL > BASIC"
+    return " > ".join(turns)
 
 
 def print_results(energy_recharge: float,

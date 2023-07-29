@@ -71,9 +71,6 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
     if user_input.num_ult_kills > 0:
         stats.init_energy += (user_input.num_ult_kills *
                               stats.ult_kill * stats.energy_recharge)
-    
-    stats.basic *= stats.energy_recharge
-    stats.skill *= stats.energy_recharge
 
     apply_eidolons(stats, user_input.char_name, user_input.eidolons)
     apply_talents(stats, user_input.char_name, user_input.talent_level)
@@ -83,6 +80,8 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
     apply_rope(stats, user_input.rope)
     apply_ornament(stats, user_input.ornament)
 
+    stats.basic *= stats.energy_recharge
+    stats.skill *= stats.energy_recharge
 
 
 def _dfs_rotation_calculation(stats: CharStats,

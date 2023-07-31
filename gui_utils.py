@@ -27,6 +27,7 @@ class UserInput:
     assume_ult: bool
     assume_tingyun_ult: bool
     assume_tingyun_e6: bool
+    technique: bool
 
 
 def configure_theme(theme: Optional[str] = None) -> None:

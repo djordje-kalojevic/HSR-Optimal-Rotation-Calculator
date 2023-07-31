@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 from termcolor import colored
+from characters import CharStats
 from follow_ups import FOLLOW_UP_ATTACKS
 from gui_utils import UserInput
 from light_cones import LIGHT_CONES
@@ -40,11 +41,13 @@ class Counters:
     follow_up_counter: int = 0
 
 
-def get_er_threshold(rotation: int, energy_recharge: float) -> float:
-    """Calculates the energy threshold required for a given rotation."""
+def get_er_breakpoint(rotation: int, attack_value: float, ult_cost: float) -> float:
+    """Calculates and returns the energy recharge breakpoint, i.e.,
+    how much more ER is required to shorten such a rotation by one turn.
+    Keep in mind that due to rounding, this can be 1-2% off."""
 
-    shorter_rot = rotation - 1 if rotation > 1 else 1
-    return round((1 / shorter_rot - energy_recharge + 1) * 100, 3)
+    needed_attack_value = ult_cost / (rotation - 1)
+    return round((needed_attack_value / attack_value - 1) * 100, 3)
 
 
 def follow_up_attack_check(char_name: str) -> float:
@@ -122,10 +125,12 @@ def find_best_rotation(lists_turns: list[list[str]]) -> str:
 
 def _order_rotation_turns(rotation: list[str]) -> str:
     """Returns the list of turns in the following format:
-    "A x SKILL > B x BASIC" where A and B are numbers of occurrences
-    for skills and basic attacks respectively. These numbers are omitted if they equal 0."""
+    "A x SKILL > B x E. BASIC > C x BASIC" where A, B, and C are numbers of occurrences
+    for skills, enhanced basic, and basic attacks respectively.
+    These attacks are omitted if their occurrence equals 0."""
 
     skill_count = rotation.count("SKILL")
+    e_basic_count = rotation.count("E. BASIC")
     basic_count = rotation.count("BASIC")
     turns = []
 
@@ -133,6 +138,11 @@ def _order_rotation_turns(rotation: list[str]) -> str:
         turns.append(f"{skill_count} x SKILL")
     elif skill_count == 1:
         turns.append("SKILL")
+
+    if e_basic_count > 1:
+        turns.append(f"{e_basic_count} x E. BASIC")
+    elif e_basic_count == 1:
+        turns.append("E. BASIC")
 
     if basic_count > 1:
         turns.append(f"{basic_count} x BASIC")
@@ -176,17 +186,29 @@ def print_results(energy_recharge: float,
     print(f"Most optimal rotation: {results.best_rotation}\n")
 
 
-def print_results_blade(energy_recharge: float,
+def print_results_blade(stats: CharStats,
                         user_input: UserInput, results: CalculationResults) -> None:
-    energy_recharge = round(energy_recharge * 100, 3)
+    """Specialized print function for Blade
+    as his rotations include only enhanced basic attacks."""
+
+    energy_recharge = round(stats.energy_recharge * 100, 3)
+    blade_breakpoint = get_er_breakpoint(
+        results.skill_rot, stats.e_basic, stats.ult_cost)
     char_info = f"{user_input.char_name} with {energy_recharge}% ER"
 
     if LIGHT_CONES.get(user_input.light_cone):
         char_info += f" and S{user_input.superimposition + 1} {user_input.light_cone}"
 
     print(colored(char_info, "green"))
+    print(f"Enchanted Basic rotation: {results.best_rotation}")
+    print(f"ER needed for the next breakpoint: {blade_breakpoint}%")
 
-    print(f"Basic rotation: {results.basic_rot} x BASIC")
-    print(f"ER needed for the next breakpoint: {results.basic_er_threshold}%")
-    print(f"Enchanted Basic rotation: {results.skill_rot} x Enchanted Basics")
-    print(f"ER needed for the next breakpoint: {results.skill_er_threshold}%")
+
+def remove_permutations(list_of_lists):
+    # Use a set to remove duplicates after converting each sublist to a tuple
+    unique_tuples = {tuple(sorted(lst)) for lst in list_of_lists}
+
+    # Convert the unique tuples back to lists and sort them
+    unique_sorted_list_of_lists = [sorted(list(tpl)) for tpl in unique_tuples]
+
+    return unique_sorted_list_of_lists

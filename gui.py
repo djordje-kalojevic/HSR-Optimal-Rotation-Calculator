@@ -32,7 +32,6 @@ class MainWindowDemo(QDialog):
         self.setWindowTitle("HSR Rotation Calculator Demo")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self.user_input = None
-
         self.setup_layout()
 
     def setup_layout(self) -> None:
@@ -117,13 +116,20 @@ class MainWindowDemo(QDialog):
         char = CHARACTERS.get(user_input.char_name)
         if not char:
             return
+
         stats = CharStats(char.ult_cost)
+        if char.is_skill_attack:
+            stats.is_skill_attack = True
+        if char.is_ult_attack:
+            stats.is_skill_attack = True
+
         run_calculations(stats, user_input)
 
     def _gather_user_input(self) -> UserInput:
         """Gathers user input and returns a UserInput object."""
         char_name = self.char_layout.char_selector.currentText()
         eidolons = self._get_eidolons()
+        technique = self.char_layout.technique_check.checkbox.isChecked()
         talent_level = self._get_talent_level()
         ability = self.char_layout.ability_selector.currentText()
 
@@ -147,7 +153,7 @@ class MainWindowDemo(QDialog):
                          light_cone, superimposition, relic,
                          num_relic_trigger, ornament, rope,
                          num_hits_taken, num_follow_ups, num_kills, num_ult_kills,
-                         assume_ult, assume_tingyun_ult, assume_tingyun_e6)
+                         assume_ult, assume_tingyun_ult, assume_tingyun_e6, technique)
 
     def _get_eidolons(self) -> int:
         """Returns the selected number of eidolons."""
@@ -217,8 +223,14 @@ class CharSelectorLayout(QGridLayout):
                            "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
         self.follow_up_selector.setEnabled(False)
 
+        self.technique_check = _CustomCheckBox(
+            parent, "Technique?",
+            tooltip_text="Has this character's technique been used before combat?")
+        self.technique_check.setEnabled(False)
+
         self.addWidget(self.char_selector, 1, 0)
-        self.addWidget(self.eidolons_selector, 1, 1, 1, 2)
+        self.addWidget(self.eidolons_selector, 1, 1)
+        self.addWidget(self.technique_check, 1, 2)
         self.addWidget(self.ability_selector, 2, 0)
         self.addWidget(self.talent_selector, 2, 1)
         self.addWidget(self.follow_up_selector, 2, 2)
@@ -249,10 +261,16 @@ class CharSelectorLayout(QGridLayout):
         else:
             self.talent_selector.setEnabled(False)
 
-        if FOLLOW_UP_ATTACKS.get(char_name):
+        # Blade's follow-ups are already included in his rotations
+        if FOLLOW_UP_ATTACKS.get(char_name) and char_name != "Blade":
             self.follow_up_selector.setEnabled(True)
         else:
             self.follow_up_selector.setEnabled(False)
+
+        if char_name == "Blade":
+            self.technique_check.setEnabled(True)
+        else:
+            self.technique_check.setEnabled(False)
 
 
 @dataclass
@@ -332,6 +350,7 @@ class AdditionalOptionsLayout(QGridLayout):
             parent,
             items=["--Assume hits taken--",
                    "every turn", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+
         self.kills_input = _CustomCombobox(
             parent,
             items=["--Assume kills--",

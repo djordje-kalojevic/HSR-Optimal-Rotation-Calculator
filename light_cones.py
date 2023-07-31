@@ -40,31 +40,34 @@ def apply_light_cone(stats: CharStats, light_cone_name: str, superimposition: in
         - superimposition: Superimposition rank of the LC."""
 
     light_cone = LIGHT_CONES.get(light_cone_name)
-
     if not light_cone:
         return
 
     energy_value = light_cone.superimpositions[superimposition]
     recharge_type = light_cone.recharge_type
 
-    if recharge_type == "ER":
+    if recharge_type == "energy_recharge":
         stats.energy_recharge += energy_value / 100
 
-    elif recharge_type == "battle start":
+    elif recharge_type == "battle_start":
         stats.init_energy += energy_value
 
     elif recharge_type == "attack":
         stats.basic += energy_value
-        stats.skill += energy_value
-        stats.ult_act += energy_value
+        if stats.is_skill_attack:
+            stats.skill += energy_value
+        if stats.is_ult_attack:
+            stats.ult_act += energy_value
 
     elif recharge_type == "skill":
         stats.skill += energy_value
 
-    elif recharge_type == "attack or hit":
+    elif recharge_type == "attack_or_hit":
         stats.basic += energy_value
-        stats.skill += energy_value
-        stats.ult_act += energy_value
+        if stats.is_skill_attack:
+            stats.skill += energy_value
+        if stats.is_ult_attack:
+            stats.ult_act += energy_value
         stats.get_hit += energy_value
 
     elif recharge_type == "echoes_coffin":
@@ -84,19 +87,16 @@ def _read_light_cones() -> dict[str, LightCone]:
 
         reader = DictReader(file)
         for row in reader:
-            name = row["name"]
-            path = row["path"]
-            rarity = row["rarity"]
-            is_event_reward = bool(row["is_event_reward"])
-            recharge_type = row["recharge_type"]
+            light_cone = LightCone(
+                row["name"],
+                row["path"],
+                row["rarity"],
+                bool(row["is_event_reward"]),
+                row["recharge_type"],
+                [
+                    float(row[f"Superimposition {i}"]) for i in range(1, 6)])
 
-            # Extract the superimposition levels from the columns
-            superimpositions = [
-                float(row[f"Superimposition {i}"]) for i in range(1, 6)]
-
-            light_cone = LightCone(name, path, rarity, is_event_reward,
-                                   recharge_type, superimpositions)
-            light_cones[name] = light_cone
+            light_cones[row["name"]] = light_cone
 
     return light_cones
 

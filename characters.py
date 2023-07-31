@@ -9,6 +9,8 @@ class Character:
     name: str
     path: str
     ult_cost: int
+    is_skill_attack: bool
+    is_ult_attack: bool
 
 
 @dataclass(slots=True)
@@ -19,11 +21,14 @@ class CharStats:
     energy_recharge: float = 1
     basic: float = 20
     skill: float = 30
+    e_basic: float = 0
     get_hit: float = 10
     kill: float = 10
     ult_kill: float = 10
     ult_act: float = 5
     init_energy: float = 0
+    is_skill_attack: bool = False
+    is_ult_attack: bool = False
 
 
 def _read_characters() -> dict[str, Character]:
@@ -35,7 +40,9 @@ def _read_characters() -> dict[str, Character]:
             character = Character(
                 row["name"],
                 row["path"],
-                int(row["ult_cost"]))
+                int(row["ult_cost"]),
+                bool(row["is_skill_attack"]),
+                bool(row["is_ult_attack"]))
 
             characters[row["name"]] = character
 

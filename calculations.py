@@ -123,7 +123,7 @@ def _dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> list[list
     follow_up_energy = follow_up_attack_check(user_input.char_name)
 
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
-    current = stats.init_energy + stats.ult_act * user_input.assume_ult
+    current = stats.init_energy
     counters = Counters()
 
     stack: list = [(current, [])]
@@ -132,7 +132,7 @@ def _dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> list[list
     while stack:
         current, turns = stack.pop()
 
-        if round(current) >= stats.ult_cost:
+        if current >= stats.ult_cost:
             all_turns.append(turns)
             continue
 
@@ -196,7 +196,7 @@ def _dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> list[list
     follow_up_energy = follow_up_attack_check(user_input.char_name)
 
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
-    current = stats.init_energy + stats.ult_act * user_input.assume_ult
+    current = stats.init_energy
     counters = Counters()
     e_basic_cost = 4
     mc_stacks = e_basic_cost if user_input.assume_ult else 0
@@ -207,7 +207,7 @@ def _dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> list[list
     while stack:
         current, turns = stack.pop()
 
-        if round(current) >= stats.ult_cost:
+        if current >= stats.ult_cost:
             all_turns.append(turns)
             continue
 
@@ -251,7 +251,7 @@ def _dfs_algorithm_blade(stats: CharStats, user_input: UserInput):
     follow_up_energy = follow_up_energy * stats.energy_recharge
 
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
-    current = stats.init_energy + stats.ult_act * user_input.assume_ult
+    current = stats.init_energy
     counters = Counters()
 
     follow_up_cost = 5
@@ -267,7 +267,7 @@ def _dfs_algorithm_blade(stats: CharStats, user_input: UserInput):
     while stack:
         current, turns = stack.pop()
 
-        if round(current) >= stats.ult_cost:
+        if current >= stats.ult_cost:
             all_turns.append(turns)
             continue
 

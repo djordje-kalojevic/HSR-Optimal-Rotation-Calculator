@@ -289,6 +289,7 @@ def _dfs_algorithm_blade(stats: CharStats, user_input: UserInput):
 
         if e_basic_charges == 0:
             stack.append((current + turn_energy, turns))
+            blade_stacks += 1
             e_basic_charges = 3
 
         if e_basic_charges > 0:

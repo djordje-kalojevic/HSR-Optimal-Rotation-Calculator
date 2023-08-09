@@ -22,6 +22,7 @@ class CharStats:
     basic: float = 20
     skill: float = 30
     e_basic: float = 0
+    follow_up: float = 0
     get_hit: float = 10
     kill: float = 10
     ult_kill: float = 10
@@ -29,6 +30,14 @@ class CharStats:
     init_energy: float = 0
     is_skill_attack: bool = False
     is_ult_attack: bool = False
+
+    def apply_energy_recharge(self):
+        stats_to_update = ['basic', 'skill', 'e_basic', 'follow_up', 'get_hit',
+                           'kill', 'ult_kill', 'ult_act', 'init_energy']
+
+        for stat in stats_to_update:
+            current_val = getattr(self, stat)
+            setattr(self, stat, current_val * self.energy_recharge)
 
 
 def _read_characters() -> dict[str, Character]:

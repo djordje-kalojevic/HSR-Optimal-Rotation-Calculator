@@ -15,12 +15,12 @@ These calculations include:
     it prioritizes rotations with the lowest skill point cost,
     if multiple rotations are eligible."""
 
-from typing import Optional
-from calculations_utils import (CalculationResults, Counters, print_results,
-                                print_results_blade, find_basic_only_rotation,
-                                find_best_rotation, find_one_skill_rotation,
-                                find_skill_only_rotation, follow_up_attack_check,
-                                get_er_breakpoint, quid_pro_quo_check, remove_permutations)
+from calculations_utils import (CalculationResults, determine_initial_energy, remove_permutations,
+                                print_results, print_results_blade,
+                                find_basic_only_rotation, find_best_rotation,
+                                find_one_skill_rotation, find_skill_only_rotation,
+                                follow_up_attack_check, get_er_breakpoint, quid_pro_quo_check)
+from detailed_breakdown import print_detailed_breakdown
 from gui_utils import UserInput
 from characters import CharStats
 from eidolons import apply_eidolons
@@ -41,34 +41,19 @@ def run_calculations(stats: CharStats, user_input: UserInput) -> None:
         return
 
     if user_input.char_name == "Blade":
-        print_results_blade(stats, user_input, results)
+        print_results_blade(stats, user_input, results.best_rotation)
 
     else:
         print_results(stats.energy_recharge, user_input, results)
+
+    if user_input.detailed_breakdown:
+        print_detailed_breakdown(stats, user_input, results.best_rotation)
 
 
 def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
     """Applies all user-selected bonuses."""
 
-    if user_input.char_name == "Clara":
-        stats.get_hit += follow_up_attack_check(user_input.char_name)
-
-    elif user_input.char_name == "Trailblazer (Preservation)":
-        stats.ult_act += 10
-
-    if user_input.assume_tingyun_ult:
-        stats.init_energy += 50
-
-    if user_input.assume_tingyun_ult and user_input.assume_tingyun_e6:
-        stats.init_energy += 10
-
-    if user_input.assume_ult:
-        stats.init_energy += stats.ult_act * stats.energy_recharge
-
-    if user_input.num_ult_kills > 0:
-        stats.init_energy += (user_input.num_ult_kills *
-                              stats.ult_kill * stats.energy_recharge)
-
+    determine_initial_energy(stats, user_input)
     apply_eidolons(stats, user_input.char_name, user_input.eidolons)
     apply_talents(stats, user_input.char_name, user_input.talent_level)
     apply_abilities(stats, user_input.ability)
@@ -77,24 +62,34 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
     apply_rope(stats, user_input.rope)
     apply_ornament(stats, user_input.ornament)
 
-    stats.basic = stats.basic * stats.energy_recharge
-    stats.skill = stats.skill * stats.energy_recharge
+    stats.follow_up = follow_up_attack_check(user_input.char_name)
+    if user_input.char_name == "Clara":
+        stats.get_hit += stats.follow_up
+
+    stats.apply_energy_recharge()
+
+    # not affected by energy recharge
+    if user_input.assume_tingyun_ult:
+        stats.init_energy += 50
+
+    if user_input.assume_tingyun_ult and user_input.assume_tingyun_e6:
+        stats.init_energy += 10
 
 
 def _rotation_calculation(stats: CharStats,
-                          user_input: UserInput) -> Optional[CalculationResults]:
+                          user_input: UserInput) -> CalculationResults:
     all_turns = _apply_correct_algorithm(stats, user_input)
-    unique_turns = remove_permutations(all_turns)
+    unique_rotations = remove_permutations(all_turns)
 
-    basic_rot = find_basic_only_rotation(unique_turns)
-    basic_er_threshold = get_er_breakpoint(
-        basic_rot, stats.basic, stats.ult_cost)
-    one_skill_rotation = find_one_skill_rotation(unique_turns)
+    basic_rot = find_basic_only_rotation(unique_rotations)
+    basic_er_threshold = get_er_breakpoint(basic_rot, stats.basic,
+                                           stats.ult_cost, stats.init_energy)
+    one_skill_rotation = find_one_skill_rotation(unique_rotations)
 
-    skill_rot = find_skill_only_rotation(unique_turns)
-    skill_er_threshold = get_er_breakpoint(
-        skill_rot, stats.skill, stats.ult_cost)
-    best_rotation = find_best_rotation(unique_turns)
+    skill_rot = find_skill_only_rotation(unique_rotations)
+    skill_er_threshold = get_er_breakpoint(skill_rot, stats.skill,
+                                           stats.ult_cost, stats.init_energy)
+    best_rotation = find_best_rotation(unique_rotations)
 
     return CalculationResults(basic_rot, basic_er_threshold, skill_rot,
                               skill_er_threshold, one_skill_rotation, best_rotation)
@@ -107,8 +102,12 @@ def _apply_correct_algorithm(stats: CharStats, user_input: UserInput) -> list[li
     elif user_input.char_name == "Trailblazer (Preservation)":
         all_turns = _dfs_algorithm_fire_mc(stats, user_input)
 
+    elif user_input.char_name == "Luka":
+        all_turns = _dfs_algorithm_luka(stats, user_input)
+
     else:
         all_turns = _dfs_algorithm_default(stats, user_input)
+
     return all_turns
 
 
@@ -120,14 +119,12 @@ def _dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> list[list
 
     quid_pro_quo_bonus = quid_pro_quo_check(
         user_input.light_cone, user_input.superimposition)
-    follow_up_energy = follow_up_attack_check(user_input.char_name)
 
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
     current = stats.init_energy
-    counters = Counters()
 
-    stack: list = [(current, [])]
     all_turns: list[list[str]] = []
+    stack: list = [(current, all_turns)]
 
     while stack:
         current, turns = stack.pop()
@@ -139,8 +136,7 @@ def _dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> list[list
         if quid_pro_quo_bonus and current <= stats.ult_cost / 2:
             current += quid_pro_quo_bonus
 
-        turn_energy = _calculate_turn_energy(
-            stats, user_input, relic_energy, follow_up_energy, counters)
+        turn_energy = _calculate_turn_energy(stats, user_input, relic_energy)
 
         stack.append((current + stats.basic + turn_energy, turns + ["BASIC"]))
         stack.append((current + stats.skill + turn_energy, turns + ["SKILL"]))
@@ -148,38 +144,25 @@ def _dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> list[list
     return all_turns
 
 
-def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy: float,
-                           follow_up_energy: float, counters: Counters) -> float:
+def _calculate_turn_energy(stats: CharStats, user_input: UserInput, relic_energy: float) -> float:
     """Calculates the energy generated during each turn based on user inputs.
     This includes follow-up attacks, kills, hits taken, and relic triggers."""
 
     turn_energy: float = 0
 
     if user_input.num_follow_ups == "every turn":
-        turn_energy += follow_up_energy
-    elif counters.follow_up_counter < user_input.num_follow_ups:
-        turn_energy += follow_up_energy
-        counters.follow_up_counter = user_input.num_follow_ups
+        turn_energy += stats.follow_up
 
     if user_input.num_kills == "every turn":
         turn_energy += stats.kill
-    elif counters.kill_counter < user_input.num_kills:
-        turn_energy += user_input.num_kills * stats.kill
-        counters.kill_counter = user_input.num_kills
 
-    if user_input.num_hits_taken == "every turn":
+    if user_input.num_hits_taken == "every turn" and user_input.char_name != "Blade":
         turn_energy += stats.get_hit
-    elif counters.hit_counter < user_input.num_hits_taken:
-        turn_energy += user_input.num_hits_taken * stats.get_hit
-        counters.hit_counter = user_input.num_hits_taken
 
     if user_input.num_relic_trigger == "every turn":
         turn_energy += relic_energy
-    elif counters.relic_trigger_counter < user_input.num_relic_trigger:
-        turn_energy += user_input.num_relic_trigger * relic_energy
-        counters.relic_trigger_counter = user_input.num_relic_trigger
 
-    return turn_energy * stats.energy_recharge
+    return turn_energy
 
 
 def _dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> list[list[str]]:
@@ -189,20 +172,21 @@ def _dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> list[list
     They cost 4 stacks, which are gained by attacking, using skills, or being attacks.
     One enhanced attack is guaranteed after using ultimate."""
 
-    e_basic = stats.basic + 10 * stats.energy_recharge
+    stats.e_basic = stats.basic + 10 * stats.energy_recharge
 
     quid_pro_quo_bonus = quid_pro_quo_check(
         user_input.light_cone, user_input.superimposition)
-    follow_up_energy = follow_up_attack_check(user_input.char_name)
 
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
     current = stats.init_energy
-    counters = Counters()
+
     e_basic_cost = 4
     mc_stacks = e_basic_cost if user_input.assume_ult else 0
+    if user_input.num_hits_taken != "every turn":
+        mc_stacks += user_input.num_hits_taken
 
-    stack: list = [(current, [])]
     all_turns: list[list[str]] = []
+    stack: list = [(current, all_turns)]
 
     while stack:
         current, turns = stack.pop()
@@ -214,17 +198,14 @@ def _dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> list[list
         if quid_pro_quo_bonus and current <= stats.ult_cost / 2:
             current += quid_pro_quo_bonus
 
-        turn_energy = _calculate_turn_energy(
-            stats, user_input, relic_energy, follow_up_energy, counters)
+        turn_energy = _calculate_turn_energy(stats, user_input, relic_energy)
 
         if user_input.num_hits_taken == "every turn":
             mc_stacks += 1
-        elif counters.hit_counter < user_input.num_hits_taken:
-            counters.hit_counter = user_input.num_hits_taken
-            mc_stacks += user_input.num_hits_taken
 
+        # Fire MC uses Enhanced Basic
         if mc_stacks >= e_basic_cost:
-            stack.append((current + e_basic + turn_energy,
+            stack.append((current + stats.e_basic + turn_energy,
                           turns + ["E. BASIC"]))
             mc_stacks -= e_basic_cost
             continue
@@ -244,25 +225,22 @@ def _dfs_algorithm_blade(stats: CharStats, user_input: UserInput):
     Given his play-style, it is assumed it starts with a skill, thus one stack is assumed."""
 
     stats.e_basic = stats.basic + 10 * stats.energy_recharge
-
-    quid_pro_quo_bonus = quid_pro_quo_check(
-        user_input.light_cone, user_input.superimposition)
-    follow_up_energy = follow_up_attack_check(user_input.char_name)
-    follow_up_energy = follow_up_energy * stats.energy_recharge
-
+    quid_pro_quo_bonus = quid_pro_quo_check(user_input.light_cone,
+                                            user_input.superimposition)
     relic_energy = user_input.relic.recharge_value if user_input.relic else 0
     current = stats.init_energy
-    counters = Counters()
 
     follow_up_cost = 5
     if user_input.eidolons == 6:
         follow_up_cost = follow_up_cost - 1
 
-    blade_stacks = 1 + 1 * user_input.assume_ult + 1 * user_input.technique
     e_basic_charges = 3
+    blade_stacks = 1 * user_input.assume_ult + 1 * user_input.technique
+    if user_input.num_hits_taken != "every turn":
+        blade_stacks += user_input.num_hits_taken
 
-    stack: list = [(current, [])]
     all_turns: list[list[str]] = []
+    stack: list = [(current, all_turns)]
 
     while stack:
         current, turns = stack.pop()
@@ -274,24 +252,23 @@ def _dfs_algorithm_blade(stats: CharStats, user_input: UserInput):
         if quid_pro_quo_bonus and current <= stats.ult_cost / 2:
             current += quid_pro_quo_bonus
 
-        turn_energy = _calculate_turn_energy_blade(
-            stats, user_input, relic_energy, counters)
+        turn_energy = _calculate_turn_energy(stats, user_input, relic_energy)
 
         if user_input.num_hits_taken == "every turn":
             blade_stacks += 1
-        elif counters.hit_counter < user_input.num_hits_taken:
-            counters.hit_counter = user_input.num_hits_taken
-            blade_stacks += user_input.num_hits_taken
 
-        if blade_stacks >= follow_up_cost:
-            stack.append((current + turn_energy + follow_up_energy, turns))
-            blade_stacks -= follow_up_cost
-
+        # Blade uses skill
         if e_basic_charges == 0:
             stack.append((current + turn_energy, turns))
             blade_stacks += 1
             e_basic_charges = 3
 
+        # Blade has enough stacks for a follow-up attack
+        if blade_stacks >= follow_up_cost:
+            stack.append((current + turn_energy + stats.follow_up, turns))
+            blade_stacks -= follow_up_cost
+
+        # Blade uses Enhanced Basic
         if e_basic_charges > 0:
             stack.append((current + turn_energy + stats.e_basic,
                           turns + ["E. BASIC"]))
@@ -301,28 +278,57 @@ def _dfs_algorithm_blade(stats: CharStats, user_input: UserInput):
     return all_turns
 
 
-def _calculate_turn_energy_blade(stats: CharStats, user_input: UserInput,
-                                 relic_energy: float, counters: Counters) -> float:
-    """Calculates the energy generated during each turn based on user inputs."""
+def _dfs_algorithm_luka(stats: CharStats, user_input: UserInput):
+    """Luka possesses the ability to use enhanced basic attacks but they generate
+    the same amount of energy as a regular basic attack.
+    These attacks cost two stacks which are generated by basic attacks, skills, and ultimates.
+    These stacks are gained by attacking, using skills, using ultimates, or being attacks.
+    Gaining these stacks also provide provide a small amount of energy."""
 
-    turn_energy: float = 0
+    stats.e_basic = stats.basic
+    quid_pro_quo_bonus = quid_pro_quo_check(user_input.light_cone,
+                                            user_input.superimposition)
+    relic_energy = user_input.relic.recharge_value if user_input.relic else 0
+    current = stats.init_energy
+    stack_energy_bonus = 3 * stats.energy_recharge
 
-    if user_input.num_kills == "every turn":
-        turn_energy += stats.kill
-    elif counters.kill_counter < user_input.num_kills:
-        turn_energy += user_input.num_kills * stats.kill
-        counters.kill_counter = user_input.num_kills
+    # one stack at the start of the battle, + 2 on ult use, +1 on technique use
+    luka_stacks = 1 + 2 * user_input.assume_ult + 1 * user_input.technique
+    current += 2 * stack_energy_bonus * user_input.assume_ult
+    e_basic_cost = 2
 
-    if user_input.num_hits_taken == "every turn":
-        turn_energy += stats.get_hit
-    elif counters.hit_counter < user_input.num_hits_taken:
-        turn_energy += user_input.num_hits_taken * stats.get_hit
-        counters.hit_counter = user_input.num_hits_taken
+    enemy_phys_weak = False
+    if user_input.matching_enemy_weakness and user_input.eidolons >= 2:
+        enemy_phys_weak = True
 
-    if user_input.num_relic_trigger == "every turn":
-        turn_energy += relic_energy
-    elif counters.relic_trigger_counter < user_input.num_relic_trigger:
-        turn_energy += user_input.num_relic_trigger * relic_energy
-        counters.relic_trigger_counter = user_input.num_relic_trigger
+    all_turns: list[list[str]] = []
+    stack: list = [(current, luka_stacks, all_turns)]
 
-    return turn_energy * stats.energy_recharge
+    while stack:
+        current, luka_stacks, turns = stack.pop()
+
+        if current >= stats.ult_cost:
+            all_turns.append(turns)
+            continue
+
+        if quid_pro_quo_bonus and current <= stats.ult_cost / 2:
+            current += quid_pro_quo_bonus
+
+        turn_energy = _calculate_turn_energy(stats, user_input, relic_energy)
+
+        # Luka uses Enhanced Basic
+        if luka_stacks >= e_basic_cost:
+            stack.append((current + stats.e_basic + turn_energy,
+                          luka_stacks - e_basic_cost, turns + ["E. BASIC"]))
+
+        # Luka uses Basic, generating one stack and 3 energy
+        stack.append((current + stats.basic + turn_energy + stack_energy_bonus,
+                     luka_stacks + 1, turns + ["BASIC"]))
+
+        # Luka uses Skill, generating one stack and 3 energy,
+        # and additionally one stack and 3 energy if enemy has physical weakness
+        stack.append(((current + stats.skill + turn_energy
+                       + stack_energy_bonus + stack_energy_bonus * enemy_phys_weak),
+                     luka_stacks + 1 + 1 * enemy_phys_weak, turns + ["SKILL"]))
+
+    return all_turns

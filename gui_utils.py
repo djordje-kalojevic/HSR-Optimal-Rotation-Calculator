@@ -28,6 +28,8 @@ class UserInput:
     assume_tingyun_ult: bool
     assume_tingyun_e6: bool
     technique: bool
+    detailed_breakdown: bool
+    matching_enemy_weakness: bool
 
 
 def configure_theme(theme: Optional[str] = None) -> None:

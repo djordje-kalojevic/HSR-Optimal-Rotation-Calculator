@@ -2,12 +2,13 @@ from dataclasses import dataclass
 from typing import Optional
 from termcolor import colored
 from characters import CharStats
+from detailed_breakdown import Rotation
 from follow_ups import FOLLOW_UP_ATTACKS
 from gui_utils import UserInput
 from light_cones import LIGHT_CONES
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class CalculationResults:
     """Dataclass that represents calculation results.
 
@@ -22,31 +23,20 @@ class CalculationResults:
     skill_rot: int
     skill_er_threshold: float
     one_skill_rotation: Optional[str]
-    best_rotation: str
+    best_rotation: Rotation
 
 
-@dataclass(slots=True)
-class Counters:
-    """Dataclass that represents various counters.
-
-    Attributes:
-        - Kill counter.
-        - Counter of how many times character was hit.
-        - Counter of how many times the relic effect was triggered.
-        - Follow-up attack counter"""
-
-    kill_counter: int = 0
-    hit_counter: int = 0
-    relic_trigger_counter: int = 0
-    follow_up_counter: int = 0
-
-
-def get_er_breakpoint(rotation: int, attack_value: float, ult_cost: float) -> float:
+def get_er_breakpoint(rotation: int, attack_value: float,
+                      ult_cost: float, init_energy: float) -> float:
     """Calculates and returns the energy recharge breakpoint, i.e.,
     how much more ER is required to shorten such a rotation by one turn.
-    Keep in mind that due to rounding, this can be 1-2% off."""
+    Return 0% if the rotation in question is 1 turn long,
+    as there could not possibly exist a shorter rotation."""
 
-    needed_attack_value = ult_cost / (rotation - 1)
+    if rotation - 1 == 0:
+        return 0
+
+    needed_attack_value = (ult_cost - init_energy) / (rotation - 1)
     return round((needed_attack_value / attack_value - 1) * 100, 3)
 
 
@@ -68,62 +58,63 @@ def quid_pro_quo_check(light_cone: str, superimposition: int) -> float:
     return LIGHT_CONES["Quid Pro Quo"].superimpositions[superimposition]
 
 
-def find_basic_only_rotation(lists_turns: list[list[str]]) -> int:
+def find_basic_only_rotation(rotations: list[list[str]]) -> int:
     """Finds shortest rotation that contains only basic attacks."""
 
-    for rotation in lists_turns:
-        if rotation.count("SKILL") > 0:
-            continue
-        return len(rotation)
+    for rotation in rotations:
+        if rotation.count("SKILL") == 0:
+            return len(rotation)
 
     return 0
 
 
-def find_skill_only_rotation(lists_turns: list[list[str]]) -> int:
+def find_skill_only_rotation(rotations: list[list[str]]) -> int:
     """Finds shortest rotation that contains only skills."""
 
-    for rotation in lists_turns:
-        if rotation.count("BASIC") > 0:
-            continue
-        return len(rotation)
+    for rotation in rotations:
+        if rotation.count("BASIC") == 0:
+            return len(rotation)
 
     return 0
 
 
-def find_one_skill_rotation(lists_turns: list[list[str]]) -> str:
+def find_one_skill_rotation(rotations: list[list[str]]) -> str:
     """Finds shortest rotation that contains only one skill."""
 
-    for best_rotation in lists_turns:
-        if best_rotation.count("SKILL") == 1:
-            best_rotation = sorted(best_rotation, reverse=True)
-            return _order_rotation_turns(best_rotation)
+    rotations = [lst for lst in rotations if lst.count("SKILL") == 1]
+    if not rotations:
+        return ""
+
+    min_length = min(len(lst) for lst in rotations)
+    shortest_rotations = [lst for lst in rotations if len(lst) == min_length]
+
+    for rotation in shortest_rotations:
+        return _order_rotation_turns(rotation).sequence
 
     return ""
 
 
-def find_best_rotation(lists_turns: list[list[str]]) -> str:
+def find_best_rotation(rotations: list[list[str]]) -> Rotation:
     """Finds the best rotation, defined as the rotation with fewest turns,
     as well as the fewest skills."""
 
-    min_length = min(len(l) for l in lists_turns)
-    shortest_lists = [l for l in lists_turns if len(l) == min_length]
-    best_rotation = []
+    min_length = min(len(lst) for lst in rotations)
+    shortest_rotations = [lst for lst in rotations if len(lst) == min_length]
 
-    if len(shortest_lists) == 1:
-        return _order_rotation_turns(shortest_lists[0])
+    if len(shortest_rotations) == 1:
+        return _order_rotation_turns(shortest_rotations[0])
 
     min_skills = 0
-    while min_skills < min_length:
-        for short_list in shortest_lists:
-            if short_list.count("SKILL") == min_skills:
-                best_rotation = sorted(short_list, reverse=True)
-                return _order_rotation_turns(best_rotation)
+    while min_skills <= min_length:
+        for rotation in shortest_rotations:
+            if rotation.count("SKILL") == min_skills:
+                return _order_rotation_turns(rotation)
         min_skills += 1
 
-    return ""
+    return Rotation("")
 
 
-def _order_rotation_turns(rotation: list[str]) -> str:
+def _order_rotation_turns(rotation: list[str]) -> Rotation:
     """Returns the list of turns in the following format:
     "A x SKILL > B x E. BASIC > C x BASIC" where A, B, and C are numbers of occurrences
     for skills, enhanced basic, and basic attacks respectively.
@@ -132,6 +123,7 @@ def _order_rotation_turns(rotation: list[str]) -> str:
     skill_count = rotation.count("SKILL")
     e_basic_count = rotation.count("E. BASIC")
     basic_count = rotation.count("BASIC")
+    num_turns = skill_count + e_basic_count + basic_count
     turns = []
 
     if skill_count > 1:
@@ -149,7 +141,10 @@ def _order_rotation_turns(rotation: list[str]) -> str:
     elif basic_count == 1:
         turns.append("BASIC")
 
-    return " > ".join(turns)
+    rotation_sequence = " > ".join(turns)
+
+    return Rotation(rotation_sequence, skill_count,
+                    e_basic_count, basic_count, num_turns)
 
 
 def print_results(energy_recharge: float,
@@ -167,12 +162,7 @@ def print_results(energy_recharge: float,
         it prioritizes rotations with the lowest skill point cost
         if multiple rotations are eligible."""
 
-    energy_recharge = round(energy_recharge * 100, 3)
-    char_info = f"{user_input.char_name} with {energy_recharge}% ER"
-
-    if LIGHT_CONES.get(user_input.light_cone):
-        char_info += f" and S{user_input.superimposition + 1} {user_input.light_cone}"
-
+    char_info = _get_char_info(energy_recharge, user_input)
     print(colored(char_info, "green"))
 
     print(f"Basic only rotation: {results.basic_rot} x BASIC")
@@ -183,32 +173,70 @@ def print_results(energy_recharge: float,
     if results.one_skill_rotation:
         print(f"One skill rotation: {results.one_skill_rotation}")
 
-    print(f"Most optimal rotation: {results.best_rotation}\n")
+    if results.best_rotation:
+        print(f"Most optimal rotation: "
+              f"{results.best_rotation.sequence}\n")
 
 
-def print_results_blade(stats: CharStats,
-                        user_input: UserInput, results: CalculationResults) -> None:
-    """Specialized print function for Blade
-    as his rotations include only enhanced basic attacks."""
+def _get_char_info(energy_recharge: float, user_input: UserInput) -> str:
+    """Collect's character info the user has input so that the user
+    can more easily keep track of, and distinguish between,
+    various calculation of the same character."""
 
-    energy_recharge = round(stats.energy_recharge * 100, 3)
-    blade_breakpoint = get_er_breakpoint(
-        results.skill_rot, stats.e_basic, stats.ult_cost)
-    char_info = f"{user_input.char_name} with {energy_recharge}% ER"
+    energy_recharge = round(energy_recharge * 100, 3)
+
+    char_info = f"E{user_input.eidolons}"
+    char_info += f" {user_input.char_name} with {energy_recharge}% ER"
 
     if LIGHT_CONES.get(user_input.light_cone):
         char_info += f" and S{user_input.superimposition + 1} {user_input.light_cone}"
 
+    if user_input.ability != "--Character Ability--":
+        char_info += f" and {user_input.ability}"
+
+    return char_info
+
+
+def print_results_blade(stats: CharStats,
+                        user_input: UserInput, best_rotation: Rotation) -> None:
+    """Specialized print function for Blade
+    as his rotations include only enhanced basic attacks."""
+
+    char_info = _get_char_info(stats.energy_recharge, user_input)
     print(colored(char_info, "green"))
-    print(f"Enchanted Basic rotation: {results.best_rotation}")
-    print(f"ER needed for the next breakpoint: {blade_breakpoint}%")
+
+    blade_breakpoint = get_er_breakpoint(best_rotation.e_basic_count, stats.e_basic,
+                                         stats.ult_cost, stats.init_energy)
+
+    print(f"Enchanted Basic rotation: {best_rotation.sequence}")
+    print(f"ER needed for the next breakpoint: {blade_breakpoint}%\n")
 
 
 def remove_permutations(list_of_lists):
-    # Use a set to remove duplicates after converting each sublist to a tuple
+    """Removes turn rotation permutations."""
+
     unique_tuples = {tuple(sorted(lst)) for lst in list_of_lists}
+    unique_lists = [list(tpl) for tpl in unique_tuples]
 
-    # Convert the unique tuples back to lists and sort them
-    unique_sorted_list_of_lists = [sorted(list(tpl)) for tpl in unique_tuples]
+    return unique_lists
 
-    return unique_sorted_list_of_lists
+
+def determine_initial_energy(stats: CharStats, user_input: UserInput):
+    if user_input.assume_ult:
+        stats.init_energy += stats.ult_act
+
+    if user_input.num_ult_kills > 0:
+        stats.init_energy += user_input.num_ult_kills * stats.ult_kill
+
+    if user_input.num_follow_ups != "every turn" and user_input.num_follow_ups > 0:
+        stats.init_energy += user_input.num_follow_ups * stats.follow_up
+
+    if user_input.num_kills != "every turn" and user_input.num_kills > 0:
+        stats.init_energy += user_input.num_kills * stats.kill
+
+    if user_input.num_hits_taken != "every turn" and user_input.num_hits_taken > 0:
+        stats.init_energy += user_input.num_hits_taken * stats.get_hit
+
+    if user_input.num_relic_trigger != "every turn" and user_input.num_relic_trigger > 0:
+        relic_energy = user_input.relic.recharge_value if user_input.relic else 0
+        stats.init_energy += user_input.num_relic_trigger * relic_energy

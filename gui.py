@@ -31,10 +31,9 @@ class MainWindowDemo(QDialog):
         self.setMinimumWidth(350)
         self.setWindowTitle("HSR Rotation Calculator Demo")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
-        self.user_input = None
-        self.setup_layout()
+        self._setup_layout()
 
-    def setup_layout(self) -> None:
+    def _setup_layout(self) -> None:
         """Creates and sets layout which allows user to input all the parameters."""
 
         layout = QVBoxLayout()
@@ -49,31 +48,12 @@ class MainWindowDemo(QDialog):
         self.relic_layout = RelicSelectionLayout(self)
         layout.addLayout(self.relic_layout)
 
-        self.extra_options_layout = AdditionalOptionsLayout(self)
-        layout.addLayout(self.extra_options_layout)
+        self.options_layout = OptionsLayout(self)
+        layout.addLayout(self.options_layout)
 
         self.button_layout = ButtonLayout(self)
         layout.addLayout(self.button_layout)
         self.setLayout(layout)
-
-    def _set_default_si(self) -> None:
-        """Sets default (assumed) superimposition level based on the following:
-            - if the Light Cone is a three star, max superimposition is assumed
-            - if the Light Cone is an event reward, max superimposition is assumed
-            - otherwise, minimum superimposition is assumed"""
-
-        selected_lc = self.lc_layout.lc_selector.currentText()
-        light_cone = LIGHT_CONES.get(selected_lc)
-
-        if not light_cone:
-            return
-
-        if light_cone.rarity == "3*" or light_cone.is_event_reward:
-            self.lc_layout.si_selector.setCurrentText(
-                "Superimposition 5")
-        else:
-            self.lc_layout.si_selector.setCurrentText(
-                "Superimposition 1")
 
     def _get_compatible_lc(self) -> None:
         """Filters out Light Cones that are not compatible with the character's path
@@ -112,6 +92,7 @@ class MainWindowDemo(QDialog):
 
     def _confirm_selection(self) -> None:
         """Gathers all user input parameters then runs all necessary calculations."""
+
         user_input = self._gather_user_input()
         char = CHARACTERS.get(user_input.char_name)
         if not char:
@@ -126,7 +107,9 @@ class MainWindowDemo(QDialog):
         run_calculations(stats, user_input)
 
     def _gather_user_input(self) -> UserInput:
-        """Gathers user input and returns a UserInput object."""
+        """Gathers user input and stores it to a UserInput object,
+        then returns said object."""
+
         char_name = self.char_layout.char_selector.currentText()
         eidolons = self._get_eidolons()
         technique = self.char_layout.technique_check.checkbox.isChecked()
@@ -135,7 +118,6 @@ class MainWindowDemo(QDialog):
 
         light_cone = self.lc_layout.lc_selector.currentText()
         superimposition = self.lc_layout.si_selector.currentIndex()
-
         relic = self._get_relic()
         num_relic_trigger = self._get_relic_trigger()
         ornament = self.relic_layout.ornament_selector.currentText()
@@ -145,15 +127,18 @@ class MainWindowDemo(QDialog):
         num_follow_ups = self._get_num_follow_ups()
         num_kills = self._get_kills()
         num_ult_kills = self._get_ult_kills()
-        assume_ult = self.extra_options_layout.assume_ult.checkbox.isChecked()
-        assume_tingyun_ult = self.extra_options_layout.assume_tingyun_ult.checkbox.isChecked()
-        assume_tingyun_e6 = self.extra_options_layout.assume_tingyun_e6.checkbox.isChecked()
+        assume_ult = self.options_layout.assume_ult.checkbox.isChecked()
+        assume_tingyun_ult = self.options_layout.assume_tingyun_ult.checkbox.isChecked()
+        assume_tingyun_e6 = self.options_layout.assume_tingyun_e6.checkbox.isChecked()
+        detailed_breakdown = self.options_layout.show_detailed_breakdown.checkbox.isChecked()
+        matching_enemy_weakness = self.options_layout.enemy_weakness.checkbox.isChecked()
 
         return UserInput(char_name, eidolons, talent_level, ability,
                          light_cone, superimposition, relic,
                          num_relic_trigger, ornament, rope,
                          num_hits_taken, num_follow_ups, num_kills, num_ult_kills,
-                         assume_ult, assume_tingyun_ult, assume_tingyun_e6, technique)
+                         assume_ult, assume_tingyun_ult, assume_tingyun_e6,
+                         technique, detailed_breakdown, matching_enemy_weakness)
 
     def _get_eidolons(self) -> int:
         """Returns the selected number of eidolons."""
@@ -174,7 +159,7 @@ class MainWindowDemo(QDialog):
 
     def _get_hits_taken(self) -> int | Literal["every turn"]:
         """Returns the selected number of hits taken."""
-        return get_int_or_literal_from_selector(self.extra_options_layout.hits_taken_input)
+        return get_int_or_literal_from_selector(self.options_layout.hits_taken_input)
 
     def _get_num_follow_ups(self) -> int | Literal["every turn"]:
         """Returns the selected number of follow-up attacks."""
@@ -182,17 +167,17 @@ class MainWindowDemo(QDialog):
 
     def _get_kills(self) -> int | Literal["every turn"]:
         """Returns the selected number of kills."""
-        return get_int_or_literal_from_selector(self.extra_options_layout.kills_input)
+        return get_int_or_literal_from_selector(self.options_layout.kills_input)
 
     def _get_ult_kills(self) -> int:
         """Returns the selected number of ult kills."""
-        return get_int_from_selector(self.extra_options_layout.ult_kills_input)
+        return get_int_from_selector(self.options_layout.ult_kills_input)
 
 
 @dataclass
 class CharSelectorLayout(QGridLayout):
     """Layout which is responsible for input of all parameters related to characters,
-    i.e., their name, eidolons, talents, abilities, and follow-up attacks."""
+    i.e., their name, Eidolons, talents, abilities, and follow-up attacks."""
 
     def __init__(self, parent: MainWindowDemo):
         super().__init__()
@@ -207,7 +192,7 @@ class CharSelectorLayout(QGridLayout):
             parent._enable_confirm_button)
 
         self.eidolons_selector = _CustomCombobox(
-            parent, items=["--Eidolon Level--", "1", "2", "3", "4", "5", "6"])
+            parent, items=["--Eidolon Level--"])
         self.eidolons_selector.setEnabled(False)
 
         self.ability_selector = _CustomCombobox(
@@ -240,19 +225,24 @@ class CharSelectorLayout(QGridLayout):
         char_name = self.char_selector.currentText()
 
         self.eidolons_selector.setEnabled(True)
-        ability_names = (["--Character Ability--"] + [a.name for a in ABILITIES.values()
-                                                      if a.char_name == char_name])
-        if len(ability_names) > 1:
+        char_ability = (["--Character Ability--"] + [a.name for a in ABILITIES.values()
+                                                     if a.char_name == char_name])
+        if len(char_ability) > 1:
             self.ability_selector.setEnabled(True)
             self.ability_selector.clear()
-            self.ability_selector.addItems(ability_names)
+            self.ability_selector.addItems(char_ability)
 
         else:
             self.ability_selector.setEnabled(False)
             self.ability_selector.setPlaceholderText("--Character Ability--")
 
-        if [e for e in EIDOLONS if e.char_name == char_name]:
+        char_eidolons = [str(e.eidolon_level) for e in EIDOLONS
+                         if e.char_name == char_name]
+        if char_eidolons:
             self.eidolons_selector.setEnabled(True)
+            self.eidolons_selector.clear()
+            self.eidolons_selector.addItems(
+                ["--Eidolon Level--"] + char_eidolons)
         else:
             self.eidolons_selector.setEnabled(False)
 
@@ -267,7 +257,7 @@ class CharSelectorLayout(QGridLayout):
         else:
             self.follow_up_selector.setEnabled(False)
 
-        if char_name == "Blade":
+        if char_name in ("Blade", "Luka"):
             self.technique_check.setEnabled(True)
         else:
             self.technique_check.setEnabled(False)
@@ -284,7 +274,7 @@ class LightConeSelectionLayout(QGridLayout):
         self.lc_selector = _CustomCombobox(
             parent, items=["--Select Light Cone--"] + LIGHT_CONE_NAMES)
         self.lc_selector.setMinimumWidth(250)
-        self.lc_selector.currentTextChanged.connect(parent._set_default_si)
+        self.lc_selector.currentTextChanged.connect(self._set_default_si)
         self.lc_selector.currentTextChanged.connect(
             self._enable_superimposition)
 
@@ -299,6 +289,23 @@ class LightConeSelectionLayout(QGridLayout):
 
     def _enable_superimposition(self) -> None:
         self.si_selector.setEnabled(True)
+
+    def _set_default_si(self) -> None:
+        """Sets default (assumed) superimposition level based on the following:
+            - if the Light Cone is a three star, max superimposition is assumed
+            - if the Light Cone is an event reward, max superimposition is assumed
+            - otherwise, minimum superimposition is assumed"""
+
+        selected_lc = self.lc_selector.currentText()
+        light_cone = LIGHT_CONES.get(selected_lc)
+
+        if not light_cone:
+            return
+
+        if light_cone.rarity == "3*" or light_cone.is_event_reward:
+            self.si_selector.setCurrentText("Superimposition 5")
+        else:
+            self.si_selector.setCurrentText("Superimposition 1")
 
 
 @dataclass
@@ -326,7 +333,6 @@ class RelicSelectionLayout(QGridLayout):
 
         self.rope_selector = _CustomCombobox(
             parent, items=["--Select ER rope--"] + ROPES)
-        self.rope_selector.setMinimumWidth(75)
 
         self.addWidget(self.relic_selector, 4, 0)
         self.addWidget(self.relic_trigger_input, 4, 1)
@@ -338,32 +344,32 @@ class RelicSelectionLayout(QGridLayout):
 
 
 @dataclass
-class AdditionalOptionsLayout(QGridLayout):
+class OptionsLayout(QGridLayout):
     """Layout which is responsible for input of all additional parameters, like party buffs,
     or the assumed number of kills or hits taken."""
 
     def __init__(self, parent: MainWindowDemo):
         super().__init__()
 
-        padding_row = QWidget()
         self.hits_taken_input = _CustomCombobox(
             parent,
-            items=["--Assume hits taken--",
-                   "every turn", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+            items=["--Assume hits taken--", "every turn",
+                   "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
 
         self.kills_input = _CustomCombobox(
             parent,
-            items=["--Assume kills--",
-                   "every turn", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+            items=["--Assume kills--", "every turn",
+                   "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
 
         self.ult_kills_input = _CustomCombobox(
             parent,
             items=["--Assume Ult kills--", "1", "2", "3", "4", "5"])
 
         self.assume_ult = _CustomCheckBox(
-            parent, "Assume Ult",
+            parent, "Assume Ultimate Activation",
             tooltip_text=("Assume Rotation starts with Ultimate activation. "
-                          "They refund 5 energy on their activation."))
+                          "They refund 5 energy on their activation."),
+            checked=True)
 
         self.assume_tingyun_ult = _CustomCheckBox(
             parent, "Assume Tingyun Ult",
@@ -373,13 +379,23 @@ class AdditionalOptionsLayout(QGridLayout):
             parent, "Assume Tingyun E6",
             tooltip_text="Tingyun Eidolon 6 grants additional 10 energy on her Ultimate.")
 
-        self.addWidget(padding_row, 6, 0, 1, 1)
+        self.show_detailed_breakdown = _CustomCheckBox(
+            parent, "Show detailed energy breakdown?",
+            tooltip_text=("Currently limited, albeit accurate, energy breakdown "
+                          "which lists energy sources and the amount of energy they generate."))
+
+        self.enemy_weakness = _CustomCheckBox(
+            parent, "Enemy has correctly weakness?",
+            tooltip_text="Does the enemy has a weakness matching character's element?")
+
         self.addWidget(self.hits_taken_input, 7, 0)
         self.addWidget(self.kills_input, 7, 1)
         self.addWidget(self.ult_kills_input, 7, 2)
         self.addWidget(self.assume_ult, 8, 0)
         self.addWidget(self.assume_tingyun_ult, 8, 1)
         self.addWidget(self.assume_tingyun_e6, 8, 2)
+        self.addWidget(self.show_detailed_breakdown, 9, 0)
+        self.addWidget(self.enemy_weakness, 9, 1)
 
 
 @dataclass
@@ -419,12 +435,12 @@ class _CustomCheckBox(QWidget):
     """A custom widget for displaying a checkbox with tooltip."""
 
     def __init__(self, parent: QWidget, label: str,
-                 tooltip_text: str) -> None:
+                 tooltip_text: str, checked=False) -> None:
         super().__init__(parent)
 
         form_layout = QFormLayout()
         self.checkbox = QCheckBox(label)
-        self.checkbox.setChecked(False)
+        self.checkbox.setChecked(checked)
         self.tooltip = QLabel()
         self.icon = QStyle.StandardPixmap.SP_MessageBoxQuestion
         self.tooltip.setPixmap(parent.style().standardPixmap(self.icon))

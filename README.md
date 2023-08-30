@@ -61,4 +61,4 @@ Your feedback, suggestions, and bug reports are very much appreciated! If you en
 
 ---
 
-*Note: The calculator's calculations are powered by various Depth-First Search algorithms. For detailed information about these algorithms and their implementation, please refer to the calculator's source code available on [here](https://github.com/djordje-kalojevic/HSR-Optimal-Rotation-Calculator/tree/master/calculation_scripts/character_algorithms).*
+*Note: The calculator's calculations are powered by various Depth-First Search algorithms. For detailed information about these algorithms and their implementation, please refer to the calculator's source code available [here](https://github.com/djordje-kalojevic/HSR-Optimal-Rotation-Calculator/tree/master/calculation_scripts/character_algorithms).*

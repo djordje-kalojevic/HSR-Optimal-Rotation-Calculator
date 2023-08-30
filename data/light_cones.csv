@@ -12,3 +12,4 @@ Passkey,Erudition,3*,,,skill,8,9,10,11,12
 Post-Op Conversation,Abundance,4*,,,energy_recharge,8,10,12,14,16
 Quid Pro Quo,Abundance,4*,TRUE,,quid_pro_quo,8,10,12,14,16
 Shared Feeling,Abundance,4*,TRUE,,bonus_energy,2,2.5,3,3.5,4
+Solitary Healing,Nihility,5*,TRUE,,bonus_energy,4,5,6,7,8

@@ -11,7 +11,7 @@ from characters import CharStats
 TALENTS_CSV = "data/talents.csv"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class Talent:
     """Dataclass that represents a character's talent.
 
@@ -59,11 +59,7 @@ def _read_talents() -> dict[str, Talent]:
         for row in reader:
             char_name = row["char_name"]
             talent_name = row["talent_name"]
-
-            # Extract the Talent levels from the columns
-            talent_levels = [
-                float(row[f"Level {i}"]) for i in range(1, 16)]
-
+            talent_levels = [float(row[f"Level {i}"]) for i in range(1, 16)]
             talent = Talent(char_name, talent_name, talent_levels)
 
             talents[char_name] = talent

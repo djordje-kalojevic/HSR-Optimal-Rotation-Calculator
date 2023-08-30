@@ -11,7 +11,7 @@ from characters import CharStats
 RELICS_CSV = "data/relics.csv"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class Relic:
     """Dataclass that represents a relic.
 

@@ -11,7 +11,7 @@ from characters import CharStats
 ABILITIES_CSV = "data/abilities.csv"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class Ability:
     """Dataclass that represents a character's ability.
 

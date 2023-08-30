@@ -11,7 +11,7 @@ from characters import CharStats
 EIDOLONS_CSV = "data/eidolons.csv"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class Eidolon:
     """Dataclass that represents a character's Eidolon.
 

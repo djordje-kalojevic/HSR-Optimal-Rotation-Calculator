@@ -10,7 +10,7 @@ from csv import DictReader
 FOLLOW_UP_ATTACKS_CSV = "data/follow_up_attacks.csv"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class FollowUPAttack:
     """Dataclass that represents a Follow-up attack.
 
@@ -41,6 +41,14 @@ def _read_follow_ups_attacks() -> dict[str, FollowUPAttack]:
             follow_up_attacks[char_name] = follow_up_attack
 
     return follow_up_attacks
+
+
+def follow_up_attack_check(char_name: str) -> float:
+    """Checks whether this character character has follow-up attacks,
+    if so returns the energy their follow-ups generate."""
+
+    follow_up_attack = FOLLOW_UP_ATTACKS.get(char_name)
+    return follow_up_attack.energy_value if follow_up_attack else 0
 
 
 FOLLOW_UP_ATTACKS = _read_follow_ups_attacks()

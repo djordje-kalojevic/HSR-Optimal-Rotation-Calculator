@@ -37,7 +37,7 @@ The calculator supports a wide range of customization options, including:
 - Numbers of kills, hits taken, etc. assumed during the rotation
 - Team buffs (e.g. Tingyun Ultimate)
 
-The results of these calculations are the presented via the terminal interface.
+The results of these calculations are then presented via the terminal interface.
 
 ## Future Plans
 

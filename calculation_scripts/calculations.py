@@ -20,6 +20,7 @@ These calculations include:
 from .calculations_utils import Rotation, determine_initial_energy
 from .character_algorithms.default_algorithm import dfs_algorithm_default, print_results
 from .character_algorithms.blade_algorithm import dfs_algorithm_blade, print_results_blade
+from .character_algorithms.fu_xuan_algorithm import dfs_algorithm_fx
 from .character_algorithms.fire_mc_algorithm import dfs_algorithm_fire_mc
 from .character_algorithms.luka_algorithm import dfs_algorithm_luka
 from .character_algorithms.DHIL_algorithm import dfs_algorithm_dhil, print_results_dhil
@@ -93,6 +94,9 @@ def _apply_correct_algorithm(stats: CharStats, user_input: UserInput) -> list[Ro
 
     elif user_input.char_name == "Dan Heng IL":
         all_rotations = dfs_algorithm_dhil(stats, user_input)
+
+    elif user_input.char_name == "Fu Xuan":
+        all_rotations = dfs_algorithm_fx(stats, user_input)
 
     elif user_input.char_name == "Trailblazer (Preservation)":
         all_rotations = dfs_algorithm_fire_mc(stats, user_input)

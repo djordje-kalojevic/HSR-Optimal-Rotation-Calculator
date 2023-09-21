@@ -27,6 +27,7 @@ class UserInput:
     ornament: str = ""
     rope: str = ""
     num_hits_taken: int | Literal["every turn"] = 0
+    ally_num_hits_taken: int | Literal["every turn"] = 0
     num_follow_ups: int | Literal["every turn"] = 0
     num_kills: int | Literal["every turn"] = 0
     num_ult_kills: int = 0

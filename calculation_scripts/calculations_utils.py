@@ -23,6 +23,8 @@ class Rotation:
     e_basic_2_count: int = 0
     e_basic_3_count: int = 0
     e_skill_count: int = 0
+    all_basics_count: int = 0
+    all_skills_count: int = 0
     turn_sequence: str = ""
 
     def __post_init__(self):
@@ -37,6 +39,9 @@ class Rotation:
         self.e_basic_2_count = self.turns.count("EB2")
         self.e_basic_3_count = self.turns.count("EB3")
         self.e_skill_count = self.turns.count("E. SKILL")
+        self.all_basics_count = (self.basic_count + self.e_basic_count +
+                                 self.e_basic_2_count + self.e_basic_3_count)
+        self.all_skills_count = self.skill_count + self.e_skill_count
         self.turn_sequence = self._order_rotation_turns()
 
     def _order_rotation_turns(self) -> str:
@@ -92,7 +97,7 @@ def find_basic_only_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
 
     try:
         basic_only_rotation = min((r for r in rotations
-                                   if r.skill_count == 0 and r.e_skill_count == 0),
+                                   if r.all_skills_count == 0),
                                   key=lambda r: (r.num_turns, -r.skill_point_generated))
         if basic_only_rotation:
             return basic_only_rotation
@@ -108,7 +113,7 @@ def find_skill_only_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
 
     try:
         skill_only_rotation = min((r for r in rotations
-                                   if r.basic_count == 0 and r.e_basic_count == 0),
+                                   if r.all_basics_count == 0),
                                   key=lambda r: (r.num_turns, -r.skill_point_generated))
         if skill_only_rotation:
             return skill_only_rotation
@@ -124,7 +129,7 @@ def find_one_skill_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
 
     try:
         skill_only_rotation = min((r for r in rotations
-                                   if r.skill_count == 1 or r.e_skill_count == 1),
+                                   if r.all_skills_count == 1),
                                   key=lambda r: (r.num_turns, -r.skill_point_generated))
         if skill_only_rotation:
             return skill_only_rotation
@@ -233,4 +238,26 @@ def calculate_turn_energy(stats: CharStats, user_input: UserInput) -> float:
         turn_energy += relic_energy
         user_input.num_relic_trigger -= 1
 
+    ally_hit_energy = _get_ally_hit_energy(stats, user_input)
+    if ally_hit_energy == 0:
+        return turn_energy
+
+    if user_input.ally_num_hits_taken == "every turn":
+        turn_energy += ally_hit_energy
+    elif user_input.ally_num_hits_taken > 0:
+        turn_energy += ally_hit_energy
+        user_input.ally_num_hits_taken -= 1
+
     return turn_energy
+
+
+def _get_ally_hit_energy(stats: CharStats, user_input: UserInput):
+
+    if user_input.char_name == "Lynx":
+        energy = 2 * stats.energy_recharge
+    elif user_input.char_name == "Fu Xuan" and user_input.eidolons >= 4:
+        energy = 5 * stats.energy_recharge
+    else:
+        return 0
+
+    return energy

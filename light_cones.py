@@ -117,7 +117,3 @@ def apply_battle_start_support_lc(stats: CharStats, support_light_cone: LightCon
 
 
 LIGHT_CONES = _read_light_cones()
-LIGHT_CONE_NAMES = [lc.name for lc in LIGHT_CONES.values()
-                    if not lc.is_support_lc]
-SUPPORT_LIGHT_CONES = [lc.name for lc in LIGHT_CONES.values()
-                       if lc.is_support_lc]

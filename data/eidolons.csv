@@ -2,6 +2,7 @@ char_name,eidolon_level,eidolon_type,energy_value
 Asta,1,skill,6
 Asta,4,energy_recharge,15
 Blade,6,,0
+Fu Xuan,4,,5
 Jing Yuan,4,lightning_lord,2
 Luka, 2,,0
 March 7th,1,ult_act,6

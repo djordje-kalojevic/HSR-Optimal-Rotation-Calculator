@@ -7,7 +7,7 @@
 
 from dataclasses import dataclass
 from typing import Literal, Optional
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QGridLayout
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
 from .widgets import (CharSelectorLayout, LightConeSelectionLayout,
                       SupportLightConeSelectionLayout, RelicSelectionLayout,
@@ -26,7 +26,6 @@ class MainWindowDemo(QDialog):
 
     def __init__(self):
         super().__init__()
-        self.setMinimumWidth(350)
         self.setWindowTitle("HSR Rotation Calculator Demo")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self._setup_layout()
@@ -35,12 +34,12 @@ class MainWindowDemo(QDialog):
         """Creates and sets layout which allows user to input all the parameters."""
 
         layout = QVBoxLayout()
-        self.grid_layout = QGridLayout()
 
+        layout.addWidget(QLabel(text="Character info:"))
         self.char_layout = CharSelectorLayout(self)
-        self.grid_layout.addLayout(self.char_layout, 0, 0)
-        layout.addLayout(self.grid_layout)
+        layout.addLayout(self.char_layout)
 
+        layout.addWidget(QLabel(text="Equipment info:"))
         self.lc_layout = LightConeSelectionLayout(self)
         layout.addLayout(self.lc_layout)
 
@@ -50,11 +49,13 @@ class MainWindowDemo(QDialog):
         self.relic_layout = RelicSelectionLayout(self)
         layout.addLayout(self.relic_layout)
 
+        layout.addWidget(QLabel(text="Combat info:"))
         self.options_layout = OptionsLayout(self)
         layout.addLayout(self.options_layout)
 
         self.button_layout = ButtonLayout(self)
         layout.addLayout(self.button_layout)
+
         self.setLayout(layout)
 
     def _get_compatible_lc(self) -> None:
@@ -151,12 +152,13 @@ class MainWindowDemo(QDialog):
         hits taken, kills, ultimate kills, and follow-up attacks."""
 
         self.user_input.num_hits_taken = self._get_hits_taken()
+        self.user_input.ally_num_hits_taken = self._get_ally_hits_taken()
         self.user_input.num_kills = self._get_kills()
         self.user_input.num_ult_kills = self._get_ult_kills()
         self.user_input.num_follow_ups = self._get_num_follow_ups()
 
     def _collect_other_input(self) -> None:
-        options = self.options_layout
+        options = self.options_layout.check_boxes
         self.user_input.assume_ult = options.assume_ult.checkbox.isChecked()
         self.user_input.assume_tingyun_ult = options.assume_tingyun_ult.checkbox.isChecked()
         self.user_input.assume_tingyun_e6 = options.assume_tingyun_e6.checkbox.isChecked()
@@ -204,7 +206,11 @@ class MainWindowDemo(QDialog):
 
     def _get_hits_taken(self) -> int | Literal["every turn"]:
         """Returns the selected number of hits taken."""
-        return get_int_or_literal_from_selector(self.options_layout.hits_taken_cb)
+        return get_int_or_literal_from_selector(self.options_layout.combo_boxes.hits_taken_cb)
+
+    def _get_ally_hits_taken(self) -> int | Literal["every turn"]:
+        """Returns the selected number of hits taken."""
+        return get_int_or_literal_from_selector(self.options_layout.combo_boxes.ally_hits_taken_cb)
 
     def _get_num_follow_ups(self) -> int | Literal["every turn"]:
         """Returns the selected number of follow-up attacks."""
@@ -212,8 +218,8 @@ class MainWindowDemo(QDialog):
 
     def _get_kills(self) -> int | Literal["every turn"]:
         """Returns the selected number of kills."""
-        return get_int_or_literal_from_selector(self.options_layout.kills_input)
+        return get_int_or_literal_from_selector(self.options_layout.combo_boxes.kills_input)
 
     def _get_ult_kills(self) -> int:
         """Returns the selected number of ult kills."""
-        return get_int_from_selector(self.options_layout.ult_kills_input)
+        return get_int_from_selector(self.options_layout.combo_boxes.ult_kills_input)

@@ -77,6 +77,3 @@ def _read_relics() -> dict[str, Relic]:
 
 
 ALL_RELICS = _read_relics()
-RELICS = [r.name for r in ALL_RELICS.values() if r.relic_type == "relic"]
-ORNAMENTS = [o.name for o in ALL_RELICS.values() if o.relic_type == "ornament"]
-ROPES = [r.name for r in ALL_RELICS.values() if r.relic_type == "rope"]

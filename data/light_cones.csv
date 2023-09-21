@@ -1,8 +1,8 @@
 name,path,rarity,is_support_lc,is_event_reward,recharge_type,Superimposition 1,Superimposition 2,Superimposition 3,Superimposition 4,Superimposition 5
 Before Tutorial Mission Begins,Nihility,4*,,TRUE,attack,4,5,6,7,8
+Brighter Than the Sun (DHIL LC),Destruction,5*,,,energy_recharge,12,14,16,18,20
 But the Battle Isn't Over,Harmony,5*,,,energy_recharge,10,12,14,16,20
 "Carve the Moon, Weave the Clouds",Harmony,4*,TRUE,,temp_energy_recharge,6,7.5,9,10.5,12
-Brighter Than the Sun (DHIL LC),Destruction,5*,,,energy_recharge,12,14,16,18,20
 Echoes of the Coffin,Abundance,5*,,,echoes_coffin,3,3.5,4,4.5,5
 Fine Fruit,Abundance,3*,TRUE,,battle_start,6,7,9,11,12
 Make the World Clamor,Erudition,4*,,,battle_start,20,23,26,29,32
@@ -12,4 +12,5 @@ Passkey,Erudition,3*,,,skill,8,9,10,11,12
 Post-Op Conversation,Abundance,4*,,,energy_recharge,8,10,12,14,16
 Quid Pro Quo,Abundance,4*,TRUE,,quid_pro_quo,8,10,12,14,16
 Shared Feeling,Abundance,4*,TRUE,,bonus_energy,2,2.5,3,3.5,4
-Solitary Healing,Nihility,5*,TRUE,,bonus_energy,4,4.5,5,5.5,6
+She Already Shut Her Eyes (FX LC),Preservation,5*,,,energy_recharge,12,14,16,18,20
+Solitary Healing,Nihility,5*,TRUE,,bonus_energy,4,5,6,7,8

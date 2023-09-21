@@ -8,12 +8,14 @@ from abilities import ABILITIES
 from eidolons import EIDOLONS
 from talents import TALENTS
 from follow_ups import FOLLOW_UP_ATTACKS
-from light_cones import LIGHT_CONE_NAMES, LIGHT_CONES, SUPPORT_LIGHT_CONES
-from relics import RELICS, ORNAMENTS, ROPES
+from light_cones import LIGHT_CONES
+from relics import ALL_RELICS
 
 
 @dataclass
 class Combobox(QComboBox):
+    """A custom combobox widget."""
+
     def __init__(self, parent, text="", items: Optional[list[str]] = None):
         super().__init__(parent)
         self.setPlaceholderText(text)
@@ -75,6 +77,8 @@ class CharSelectorLayout(QGridLayout):
         self.eidolons_selector = Combobox(
             parent, items=["--Eidolon Level--"])
         self.eidolons_selector.setEnabled(False)
+        self.eidolons_selector.currentTextChanged.connect(lambda:
+                                                          self._enable_ally_hits(parent))
 
         self.ability_selector = Combobox(
             parent, items=["--Character Ability--"])
@@ -100,11 +104,13 @@ class CharSelectorLayout(QGridLayout):
         self.addWidget(self.ability_selector, 2, 0)
         self.addWidget(self.talent_selector, 2, 1)
         self.addWidget(self.follow_up_selector, 2, 2)
-        self.addWidget(QWidget(), 3, 0)
 
     def _enable_options(self, parent) -> None:
+        """Enables options based on what character's capable of.
+        This includes Eidolons, abilities, talents,
+        follow-up attacks and the like."""
+
         char_name = self.char_selector.currentText()
-        eidolon_level = self.eidolons_selector.currentText()
         char = CHARACTERS.get(char_name)
         if not char:
             return
@@ -115,9 +121,10 @@ class CharSelectorLayout(QGridLayout):
         self._enable_char_talents(char_name)
         self._enable_follow_up_attacks(char_name)
         self._enable_technique_toggle(char)
+        self._enable_ally_hits(parent)
 
     def _enable_ult_kills_input(self, parent, char: Character):
-        options = parent.options_layout
+        options = parent.options_layout.combo_boxes
         if char.is_ult_attack:
             options.ult_kills_input.setEnabled(True)
 
@@ -171,6 +178,19 @@ class CharSelectorLayout(QGridLayout):
         else:
             self.technique_check.setEnabled(False)
 
+    def _enable_ally_hits(self, parent):
+        char_name = self.char_selector.currentText()
+        checkbox = parent.options_layout.combo_boxes.ally_hits_taken_cb
+        eidolon = parent._get_eidolons()
+
+        if char_name == "Lynx":
+            checkbox.setEnabled(True)
+        elif char_name == "Fu Xuan" and eidolon >= 4:
+            checkbox.setEnabled(True)
+        else:
+            checkbox.setCurrentText("--Assume ally hits taken--")
+            checkbox.setEnabled(False)
+
 
 @dataclass
 class LightConeSelectionLayout(QGridLayout):
@@ -180,8 +200,9 @@ class LightConeSelectionLayout(QGridLayout):
     def __init__(self, parent):
         super().__init__()
 
+        lcs = [lc.name for lc in LIGHT_CONES.values() if not lc.is_support_lc]
         self.lc_selector = Combobox(
-            parent, items=["--Select Light Cone--"] + LIGHT_CONE_NAMES)
+            parent, items=["--Select Light Cone--"] + lcs)
         self.lc_selector.currentTextChanged.connect(self._set_default_si)
         self.lc_selector.currentTextChanged.connect(
             self._enable_superimposition)
@@ -231,8 +252,10 @@ class SupportLightConeSelectionLayout(QGridLayout):
     def __init__(self, parent):
         super().__init__()
 
+        support_lcs = [lc.name for lc in LIGHT_CONES.values()
+                       if lc.is_support_lc]
         self.lc_selector = Combobox(
-            parent, items=["--Select Support Light Cone--"] + SUPPORT_LIGHT_CONES)
+            parent, items=["--Select Support Light Cone--"] + support_lcs)
         self.lc_selector.currentTextChanged.connect(self._set_default_si)
         self.lc_selector.currentTextChanged.connect(
             self._enable_superimposition)
@@ -248,9 +271,9 @@ class SupportLightConeSelectionLayout(QGridLayout):
                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
         self.trigger_input.setEnabled(False)
 
-        self.addWidget(self.lc_selector, 3, 0, 1, 2)
-        self.addWidget(self.si_selector, 3, 3)
-        self.addWidget(self.trigger_input, 3, 4)
+        self.addWidget(self.lc_selector, 0, 0, 1, 2)
+        self.addWidget(self.si_selector, 0, 3)
+        self.addWidget(self.trigger_input, 0, 4)
 
     def _enable_superimposition(self) -> None:
         selected_lc = self.lc_selector.currentText()
@@ -296,9 +319,10 @@ class RelicSelectionLayout(QGridLayout):
 
     def __init__(self, parent):
         super().__init__()
-
+        relics = [r.name for r in ALL_RELICS.values()
+                  if r.relic_type == "relic"]
         self.relic_selector = Combobox(
-            parent, "--Select Relic--", RELICS)
+            parent, "--Select Relic--", relics)
         self.relic_selector.currentTextChanged.connect(
             self._enable_relic_toggle)
         self.relic_trigger_input = Combobox(
@@ -307,16 +331,19 @@ class RelicSelectionLayout(QGridLayout):
                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
         self.relic_trigger_input.setEnabled(False)
 
+        ornaments = [o.name for o in ALL_RELICS.values()
+                     if o.relic_type == "ornament"]
         self.ornament_selector = Combobox(
-            parent, items=["--Select Ornament--"] + ORNAMENTS)
+            parent, items=["--Select Ornament--"] + ornaments)
 
+        ropes = [r.name for r in ALL_RELICS.values() if r.relic_type == "rope"]
         self.rope_selector = Combobox(
-            parent, items=["--Select ER rope--"] + ROPES)
+            parent, items=["--Select Energy Recharge rope--"] + ropes)
 
-        self.addWidget(self.relic_selector, 4, 0)
-        self.addWidget(self.relic_trigger_input, 4, 1)
-        self.addWidget(self.ornament_selector, 5, 0)
-        self.addWidget(self.rope_selector, 5, 1)
+        self.addWidget(self.relic_selector, 0, 0)
+        self.addWidget(self.relic_trigger_input, 0, 1)
+        self.addWidget(self.ornament_selector, 1, 0)
+        self.addWidget(self.rope_selector, 1, 1)
 
     def _enable_relic_toggle(self) -> None:
         self.relic_trigger_input.setEnabled(True)
@@ -330,17 +357,43 @@ class OptionsLayout(QGridLayout):
     def __init__(self, parent):
         super().__init__()
 
+        self.combo_boxes = ComboboxOptionsLayout(parent)
+        self.addLayout(self.combo_boxes, 0, 0)
+
+        self.check_boxes = CheckboxOptionsLayout(parent)
+        self.addLayout(self.check_boxes, 1, 0)
+
+
+@dataclass
+class ComboboxOptionsLayout(QGridLayout):
+    """Layout which is responsible for input of all additional parameters, like party buffs,
+    or the assumed number of kills or hits taken."""
+
+    def __init__(self, parent):
+        super().__init__()
+
         self.hits_taken_input = QHBoxLayout()
 
         self.hits_taken_cb = Combobox(
             parent,
             items=["--Assume hits taken--", "every turn",
                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
-        self.tooltip = Tooltip(
+        self.hits_taken_tooltip = Tooltip(
             tooltip_text=("It is assumed that you get hit for 10 energy. "
                           "However, generated energy can range from 2 to 25 energy "
                           "depending on the enemy that hits you "
                           "or the number of hits the attack constitutes of."))
+
+        self.ally_hits_taken_input = QHBoxLayout()
+        self.ally_hits_taken_cb = Combobox(
+            parent,
+            items=["--Assume ally hits taken--", "every turn",
+                   "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+        self.ally_hits_taken_tooltip = Tooltip(
+            tooltip_text=("Energy gained when ally gets hit. "
+                          "Note that for Lynx to benefit from this ally must have Lynx's "
+                          '"Survival Response" (continues healing effect) applied to them.'))
+        self.ally_hits_taken_cb.setEnabled(False)
 
         self.kills_input = Combobox(
             parent,
@@ -351,6 +404,27 @@ class OptionsLayout(QGridLayout):
             parent,
             items=["--Assume Ult kills--", "1", "2", "3", "4", "5"])
         self.ult_kills_input.setEnabled(False)
+
+        self.hits_taken_input.addWidget(self.hits_taken_cb, stretch=1)
+        self.hits_taken_input.addWidget(self.hits_taken_tooltip)
+
+        self.ally_hits_taken_input.addWidget(
+            self.ally_hits_taken_cb, stretch=1)
+        self.ally_hits_taken_input.addWidget(self.ally_hits_taken_tooltip)
+
+        self.addLayout(self.hits_taken_input, 0, 0)
+        self.addLayout(self.ally_hits_taken_input, 0, 1)
+        self.addWidget(self.kills_input, 1, 0)
+        self.addWidget(self.ult_kills_input, 1, 1)
+
+
+@dataclass
+class CheckboxOptionsLayout(QGridLayout):
+    """Layout which is responsible for input of all additional parameters, like party buffs,
+    or the assumed number of kills or hits taken."""
+
+    def __init__(self, parent):
+        super().__init__()
 
         self.assume_ult = CheckBox(
             parent, "Assume Ultimate Activation",
@@ -375,16 +449,11 @@ class OptionsLayout(QGridLayout):
             parent, "Enemy has correctly weakness?",
             tooltip_text="Does the enemy has a weakness matching character's element?")
 
-        self.hits_taken_input.addWidget(self.hits_taken_cb, stretch=1)
-        self.hits_taken_input.addWidget(self.tooltip)
-        self.addLayout(self.hits_taken_input, 7, 0)
-        self.addWidget(self.kills_input, 7, 1)
-        self.addWidget(self.ult_kills_input, 7, 2)
-        self.addWidget(self.assume_ult, 8, 0)
-        self.addWidget(self.assume_tingyun_ult, 8, 1)
-        self.addWidget(self.assume_tingyun_e6, 8, 2)
-        self.addWidget(self.show_detailed_breakdown, 9, 0)
-        self.addWidget(self.enemy_weakness, 9, 1)
+        self.addWidget(self.assume_ult, 0, 0)
+        self.addWidget(self.assume_tingyun_ult, 0, 1)
+        self.addWidget(self.assume_tingyun_e6, 0, 2)
+        self.addWidget(self.show_detailed_breakdown, 1, 0)
+        self.addWidget(self.enemy_weakness, 1, 1)
 
 
 @dataclass
@@ -402,7 +471,5 @@ class ButtonLayout(QGridLayout):
 
         self.reset_button = QPushButton("Reset Window")
         self.reset_button.clicked.connect(parent._refresh_window)
-        padding_row = QWidget()
-        self.addWidget(padding_row, 99, 0, 2, 2)
         self.addWidget(self.reset_button, 100, 0)
         self.addWidget(self.confirm_button, 100, 1)

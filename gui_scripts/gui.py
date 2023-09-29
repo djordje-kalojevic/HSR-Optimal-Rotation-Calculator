@@ -69,7 +69,8 @@ class MainWindowDemo(QDialog):
         char = CHARACTERS.get(selected_character)
         if not char:
             return
-        lcs = [lc.name for lc in LIGHT_CONES.values() if lc.path == char.path]
+        lcs = [lc.name for lc in LIGHT_CONES.values()
+               if lc.path == char.path and not lc.is_support_lc]
         self.lc_layout.lc_selector.clear()
 
         if lcs:

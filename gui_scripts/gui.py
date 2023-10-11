@@ -1,6 +1,6 @@
 """GUI that allows the user to input various parameters:
     - character
-    - character related parameters (like Eidolons, certain talents, and abilities)
+    - character related parameters (like Eidolons, certain talents, and traces)
     - equipment (like Light Cones, Relics, Ornaments, Ropes)
     - team buffs (e.g., Tingyun Ultimate)
     - additional parameters like the number of kills and hits taken."""
@@ -9,9 +9,9 @@ from dataclasses import dataclass
 from typing import Literal, Optional
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
-from .widgets import (CharSelectorLayout, LightConeSelectionLayout,
+from .widgets import (CharSelectorLayout, Combobox, EnemyInfoLayout, LightConeSelectionLayout,
                       SupportLightConeSelectionLayout, RelicSelectionLayout,
-                      OptionsLayout, ButtonLayout)
+                      OptionsLayout, ButtonLayout, TooltipCheckBox)
 from .gui_utils import UserInput
 from .gui_utils import get_int_from_selector, get_int_or_literal_from_selector
 from characters import CharStats, CHARACTERS
@@ -49,6 +49,10 @@ class MainWindowDemo(QDialog):
         self.relic_layout = RelicSelectionLayout(self)
         layout.addLayout(self.relic_layout)
 
+        layout.addWidget(QLabel(text="Enemy info:"))
+        self.enemy_info_layout = EnemyInfoLayout(self)
+        layout.addLayout(self.enemy_info_layout)
+
         layout.addWidget(QLabel(text="Combat info:"))
         self.options_layout = OptionsLayout(self)
         layout.addLayout(self.options_layout)
@@ -58,7 +62,7 @@ class MainWindowDemo(QDialog):
 
         self.setLayout(layout)
 
-    def _get_compatible_lc(self) -> None:
+    def get_compatible_lc(self) -> None:
         """Filters out Light Cones that are not compatible with the character's path
         as they provide no relevant bonuses. Then adds these LCs to the relevant combobox.
 
@@ -69,7 +73,8 @@ class MainWindowDemo(QDialog):
         char = CHARACTERS.get(selected_character)
         if not char:
             return
-        lcs = [lc.name for lc in LIGHT_CONES.values() if lc.path == char.path]
+        lcs = [lc.name for lc in LIGHT_CONES.values()
+               if lc.path == char.path and not lc.is_support_lc]
         self.lc_layout.lc_selector.clear()
 
         if lcs:
@@ -80,21 +85,27 @@ class MainWindowDemo(QDialog):
                 "--Select Light Cone--")
         else:
             self.lc_layout.lc_selector.setPlaceholderText(
-                "No supported Light Cones for this Path")
+                "No supported Light Cones found for this Path")
             self.lc_layout.lc_selector.setEnabled(False)
             self.lc_layout.si_selector.setEnabled(False)
 
-    def _refresh_window(self) -> None:
-        """Quick and dirty way of refreshing the window."""
+    def refresh_window(self) -> None:
+        """Resets all inputs to their default values."""
 
-        self.close()
-        dialog = MainWindowDemo()
-        dialog.exec()
+        self.button_layout.confirm_button.setEnabled(False)
 
-    def _enable_confirm_button(self) -> None:
+        combo_box: Combobox
+        for combo_box in self.findChildren(Combobox):
+            combo_box.reset_selection()
+
+        check_box: TooltipCheckBox
+        for check_box in self.findChildren(TooltipCheckBox):
+            check_box.reset()
+
+    def enable_confirm_button(self) -> None:
         self.button_layout.confirm_button.setEnabled(True)
 
-    def _confirm_selection(self) -> None:
+    def confirm_selection(self) -> None:
         """Confirms all input parameters then runs all necessary calculations."""
 
         self._collect_user_input()
@@ -122,13 +133,13 @@ class MainWindowDemo(QDialog):
 
     def _collect_char_input(self) -> None:
         """Collects character input, this includes:
-        their name, their Eidolon level, talent level, ability possessed,
+        their name, their Eidolon level, talent level, trace possessed,
         as well as whether their technique was used before combat."""
 
         self.user_input.char_name = self.char_layout.char_selector.currentText()
-        self.user_input.eidolons = self._get_eidolons()
+        self.user_input.eidolons = self.get_eidolons()
         self.user_input.talent_level = self._get_talent_level()
-        self.user_input.ability = self.char_layout.ability_selector.currentText()
+        self.user_input.trace = self.char_layout.trace_selector.currentText()
         self.user_input.technique = self.char_layout.technique_check.checkbox.isChecked()
 
     def _collect_gear_input(self) -> None:
@@ -159,11 +170,14 @@ class MainWindowDemo(QDialog):
 
     def _collect_other_input(self) -> None:
         options = self.options_layout.check_boxes
-        self.user_input.assume_ult = options.assume_ult.checkbox.isChecked()
-        self.user_input.assume_tingyun_ult = options.assume_tingyun_ult.checkbox.isChecked()
-        self.user_input.assume_tingyun_e6 = options.assume_tingyun_e6.checkbox.isChecked()
-        self.user_input.detailed_breakdown = options.show_detailed_breakdown.checkbox.isChecked()
-        self.user_input.matching_enemy_weakness = options.enemy_weakness.checkbox.isChecked()
+        user_input = self.user_input
+        user_input.assume_ult = options.assume_ult.checkbox.isChecked()
+        user_input.assume_tingyun_ult = options.assume_tingyun_ult.checkbox.isChecked()
+        user_input.assume_tingyun_e6 = options.assume_tingyun_e6.checkbox.isChecked()
+        user_input.detailed_breakdown = options.show_detailed_breakdown.checkbox.isChecked()
+        user_input.matching_enemy_weakness = (
+            self.enemy_info_layout.enemy_weakness.checkbox.isChecked())
+        user_input.enemy_count = self._get_enemy_count()
 
     def _get_light_cone(self):
         light_cone_name = self.lc_layout.lc_selector.currentText()
@@ -183,7 +197,7 @@ class MainWindowDemo(QDialog):
 
         return None
 
-    def _get_eidolons(self) -> int:
+    def get_eidolons(self) -> int:
         """Returns the selected number of eidolons."""
         return get_int_from_selector(self.char_layout.eidolons_selector)
 
@@ -223,3 +237,10 @@ class MainWindowDemo(QDialog):
     def _get_ult_kills(self) -> int:
         """Returns the selected number of ult kills."""
         return get_int_from_selector(self.options_layout.combo_boxes.ult_kills_input)
+
+    def _get_enemy_count(self) -> int:
+        """Returns the selected number of enemies.
+        If no input is detected the default value is one enemy."""
+
+        enemy_count = get_int_from_selector(self.enemy_info_layout.enemy_count)
+        return enemy_count if enemy_count != 0 else 1

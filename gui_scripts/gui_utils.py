@@ -19,7 +19,7 @@ class UserInput:
     eidolons: int = 0
     talent_level: int = 0
     technique: bool = False
-    ability: str = ""
+    trace: str = ""
     light_cone: Optional[LightCone] = None
     support_light_cone: Optional[LightCone] = None
     relic: Optional[Relic] = None
@@ -36,6 +36,7 @@ class UserInput:
     assume_tingyun_e6: bool = False
     detailed_breakdown: bool = False
     matching_enemy_weakness: bool = False
+    enemy_count: int = 1
     _caches: dict[str, dict] = field(init=False, default_factory=dict)
 
     def cache(self, cache_name):
@@ -71,7 +72,8 @@ def configure_theme(theme: Optional[str] = None) -> None:
 
 
 def get_int_from_selector(selector: QComboBox) -> int:
-    """Helper function to get an integer value from a combobox."""
+    """Helper function to get an integer value from a combobox.
+    Returns 0 if there was no selection."""
 
     try:
         return int(selector.currentText())

@@ -63,7 +63,8 @@ def _read_light_cones() -> dict[str, LightCone]:
 
 
 def apply_light_cones(stats: CharStats, light_cone: Optional[LightCone],
-                      support_light_cone: Optional[LightCone]):
+                      support_light_cone: Optional[LightCone],
+                      char_name: str, enemy_count: int) -> None:
     """Applies Light Cone bonuses to the character's stats.
 
     Args:
@@ -72,13 +73,14 @@ def apply_light_cones(stats: CharStats, light_cone: Optional[LightCone],
         - superimposition: Superimposition rank of the LC."""
 
     if light_cone:
-        apply_light_cone_bonus(stats, light_cone)
+        apply_light_cone_bonus(stats, light_cone, char_name, enemy_count)
 
     if support_light_cone and support_light_cone.recharge_type == "battle_start":
         apply_battle_start_support_lc(stats, support_light_cone)
 
 
-def apply_light_cone_bonus(stats: CharStats, light_cone: LightCone):
+def apply_light_cone_bonus(stats: CharStats, light_cone: LightCone,
+                           char_name: str, enemy_count: int) -> None:
     lc_bonus = light_cone.energy_values[light_cone.superimposition]
     recharge_type = light_cone.recharge_type
 
@@ -108,7 +110,14 @@ def apply_light_cone_bonus(stats: CharStats, light_cone: LightCone):
 
     elif recharge_type == "echoes_coffin":
         stats.basic += lc_bonus
-        stats.ult_act += 2 * lc_bonus
+        if stats.is_skill_attack:
+            stats.skill += lc_bonus
+        if stats.is_ult_attack:
+            stats.ult_act += lc_bonus
+        elif char_name == "Luocha":
+            # Luocha's ultimate hits all enemies, however, Echoes of the Coffin stacks up to 3
+            count = min(enemy_count, 3)
+            stats.ult_act += count * lc_bonus
 
 
 def apply_battle_start_support_lc(stats: CharStats, support_light_cone: LightCone):

@@ -63,6 +63,9 @@ class CharStats:
 
 
 def _read_characters() -> dict[str, Character]:
+    """Reads the character data and returns the supported characters
+    (those that have their Ultimate costs revealed)."""
+
     with open(CHARACTERS_CSV, "r", encoding="utf-8") as file:
         characters: dict[str, Character] = {}
 
@@ -83,5 +86,5 @@ def _read_characters() -> dict[str, Character]:
 
 CHARACTERS = _read_characters()
 # only supports characters which have had their ult costs revealed
-SUPPORTED_CHARACTERS = [char.name for char in CHARACTERS.values()
-                        if char.ult_cost > 0]
+CHARACTER_NAMES = [char.name for char in CHARACTERS.values()
+                   if char.ult_cost > 0]

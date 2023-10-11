@@ -2,7 +2,7 @@
 and run all the necessary calculations.
 
 These bonuses include:
-    - Character bonuses (Eidolons, Talents, Abilities)
+    - Character bonuses (Eidolons, Talents, Traces)
     - Equipment (Light Cone, Rope, Ornaments)
     - other bonuses, such as ones provided by teammates.
 
@@ -22,6 +22,7 @@ from .character_algorithms.default_algorithm import dfs_algorithm_default, print
 from .character_algorithms.blade_algorithm import dfs_algorithm_blade, print_results_blade
 from .character_algorithms.fu_xuan_algorithm import dfs_algorithm_fx
 from .character_algorithms.fire_mc_algorithm import dfs_algorithm_fire_mc
+from .character_algorithms.jingliu_algorithm import dfs_algorithm_jingliu
 from .character_algorithms.luka_algorithm import dfs_algorithm_luka
 from .character_algorithms.DHIL_algorithm import dfs_algorithm_dhil, print_results_dhil
 from .detailed_breakdown import print_detailed_breakdown
@@ -30,7 +31,7 @@ from gui_scripts.gui_utils import UserInput
 from characters import CharStats
 from eidolons import apply_eidolons
 from talents import apply_talents
-from abilities import apply_abilities
+from traces import apply_traces
 from light_cones import apply_light_cones
 from relics import apply_ornament, apply_rope
 
@@ -60,12 +61,12 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> CharStats:
     then applies the energy recharge (ER) to those updated stats,
     the adds bonuses that are not affected by ER, then returns those updated stats."""
 
-    apply_eidolons(stats, user_input.char_name, user_input.eidolons)
+    apply_eidolons(stats, user_input)
     apply_talents(stats, user_input.char_name, user_input.talent_level)
-    apply_abilities(stats, user_input.ability)
+    apply_traces(stats, user_input.trace)
 
-    apply_light_cones(stats, user_input.light_cone,
-                      user_input.support_light_cone)
+    apply_light_cones(stats, user_input.light_cone, user_input.support_light_cone,
+                      user_input.char_name, user_input.enemy_count)
     apply_rope(stats, user_input.rope)
     apply_ornament(stats, user_input.ornament)
 
@@ -97,6 +98,9 @@ def _apply_correct_algorithm(stats: CharStats, user_input: UserInput) -> list[Ro
 
     elif user_input.char_name == "Fu Xuan":
         all_rotations = dfs_algorithm_fx(stats, user_input)
+
+    elif user_input.char_name == "Jingliu":
+        all_rotations = dfs_algorithm_jingliu(stats, user_input)
 
     elif user_input.char_name == "Trailblazer (Preservation)":
         all_rotations = dfs_algorithm_fire_mc(stats, user_input)

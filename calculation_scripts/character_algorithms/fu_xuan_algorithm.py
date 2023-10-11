@@ -12,16 +12,16 @@ def dfs_algorithm_fx(stats: CharStats, user_input: UserInput):
 
     curr_energy = stats.init_energy
     matrix_duration = 2 if user_input.technique else 0
-    skill_points_used = 0
+    skill_points_generated = 0
     all_rotations: list[Rotation] = []
     stack: list = [(curr_energy, all_rotations,
-                    skill_points_used, matrix_duration)]
+                    skill_points_generated, matrix_duration)]
 
     while stack:
-        curr_energy, turns, skill_points_used, matrix_duration = stack.pop()
+        curr_energy, turns, skill_points_generated, matrix_duration = stack.pop()
 
         if curr_energy >= stats.ult_cost:
-            rotation = Rotation(curr_energy, turns, skill_points_used)
+            rotation = Rotation(curr_energy, turns, skill_points_generated)
             all_rotations.append(rotation)
             continue
 
@@ -31,16 +31,16 @@ def dfs_algorithm_fx(stats: CharStats, user_input: UserInput):
         # Fu Xuan uses Skill
         if matrix_duration == 0:
             stack.append((curr_energy + stats.skill + turn_energy,
-                          turns + ["SKILL"], skill_points_used + 1, 3))
+                          turns + ["SKILL"], skill_points_generated - 1, 3))
 
         # Fu Xuan uses Enhanced Skill
         elif matrix_duration > 0:
             stack.append((curr_energy + stats.e_skill + turn_energy,
-                          turns + ["E. SKILL"], skill_points_used + 1, 3))
+                          turns + ["E. SKILL"], skill_points_generated + 1, 3))
 
         # Fu Xuan uses Basic attack
         stack.append((curr_energy + stats.basic + turn_energy,
-                      turns + ["BASIC"], skill_points_used - 1,
+                      turns + ["BASIC"], skill_points_generated + 1,
                       matrix_duration - 1))
 
     return all_rotations

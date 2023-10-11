@@ -32,7 +32,7 @@ This option will list all the energy sources and the amount of energy they have 
 The calculator supports a wide range of customization options, including:
 
 - Character selection
-- Their associated eidolons, abilities, talents, and techniques
+- Their associated eidolons, traces, talents, and techniques
 - Equipped Light Cones, support Light Cones, as well as relics, ornaments and energy recharge ropes
 - Numbers of kills, hits taken, etc. assumed during the rotation
 - Team buffs (e.g. Tingyun Ultimate)
@@ -60,5 +60,7 @@ To access the HSR Optimal Rotation Calculator, you can:
 Your feedback, suggestions, and bug reports are very much appreciated! If you encounter any issues or have ideas for improvement, please don't hesitate to contribute by submitting issues or pull requests on [GitHub](https://github.com/djordje-kalojevic/HSR-Optimal-Rotation-Calculator/issues).
 
 ---
+
+*Note: Version numbers will follow game release versions as much as possible, i.e., Calculator's v1.3 includes all new additions found in the game's 1.3 update.*
 
 *Note: The calculator's calculations are powered by various Depth-First Search algorithms. For detailed information about these algorithms and their implementation, please refer to the calculator's source code available [here](https://github.com/djordje-kalojevic/HSR-Optimal-Rotation-Calculator/tree/master/calculation_scripts/character_algorithms).*

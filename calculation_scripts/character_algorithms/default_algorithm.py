@@ -1,7 +1,6 @@
 """This module contains a default Depth-First Search algorithm
 for characters that do not have a specialized one."""
 
-from termcolor import colored
 from calculation_scripts.calculations_utils import (
     Rotation, calculate_turn_energy,
     find_basic_only_rotation, find_best_rotation,
@@ -34,8 +33,11 @@ def dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> list[Rotat
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)
         turn_energy = calculate_turn_energy(stats, user_input)
 
+        # Character uses Basic Attack
         stack.append((curr_energy + stats.basic + turn_energy,
                      turns + ["BASIC"], skill_points_generated + 1))
+
+        # Character uses Skill
         stack.append((curr_energy + stats.skill + turn_energy,
                      turns + ["SKILL"], skill_points_generated - 1))
 
@@ -57,8 +59,7 @@ def print_results(stats: CharStats, user_input: UserInput,
         it prioritizes rotations with the lowest skill point cost
         if multiple rotations are eligible."""
 
-    char_info = get_char_info(stats.energy_recharge, user_input)
-    print(colored(char_info, "green"))
+    print(get_char_info(stats.energy_recharge, user_input))
 
     best_rotation = find_best_rotation(all_rotations)
     if best_rotation:
@@ -70,26 +71,27 @@ def print_results(stats: CharStats, user_input: UserInput,
         print(f"Neutral rotation ({neutral_rotation.energy_generated} energy): "
               f"{neutral_rotation.turn_sequence}")
 
-    basic_only_rotation = find_basic_only_rotation(all_rotations)
-    if basic_only_rotation:
-        basic_er_threshold = get_er_breakpoint(basic_only_rotation, stats.basic,
+    basic_only_rot = find_basic_only_rotation(all_rotations)
+    if basic_only_rot:
+        print(f"Basic only rotation ({basic_only_rot.energy_generated} energy, "
+              f"{basic_only_rot.sp_cost_per_turn} SP/T): {basic_only_rot.turn_sequence}")
+        basic_er_threshold = get_er_breakpoint(basic_only_rot, stats.basic,
                                                stats.ult_cost, stats.init_energy)
-        print(f"Basic only rotation ({basic_only_rotation.energy_generated} energy): "
-              f"{basic_only_rotation.turn_sequence}")
-        print(f"ER needed for the next breakpoint: {basic_er_threshold}%")
+        if basic_er_threshold > 0:
+            print(f"ER needed for the next breakpoint: {basic_er_threshold}%")
 
-    skill_only_rotation = find_skill_only_rotation(all_rotations)
-    if skill_only_rotation:
-        skill_er_threshold = get_er_breakpoint(skill_only_rotation, stats.skill,
+    skill_only_rot = find_skill_only_rotation(all_rotations)
+    if skill_only_rot:
+        print(f"Skill only rotation ({skill_only_rot.energy_generated} energy, "
+              f"{skill_only_rot.sp_cost_per_turn} SP/T): {skill_only_rot.turn_sequence}")
+        skill_er_threshold = get_er_breakpoint(skill_only_rot, stats.skill,
                                                stats.ult_cost, stats.init_energy)
-        print(f"Skill only rotation ({skill_only_rotation.energy_generated} energy): "
-              f"{skill_only_rotation.turn_sequence}")
-        print(f"ER needed for the next breakpoint: {skill_er_threshold}%")
+        if skill_er_threshold > 0:
+            print(f"ER needed for the next breakpoint: {skill_er_threshold}%")
 
-    one_skill_rotation = find_one_skill_rotation(all_rotations)
-    if one_skill_rotation:
-        print(f"One skill rotation ({one_skill_rotation.energy_generated} energy, "
-              f"{one_skill_rotation.sp_cost_per_turn} SP/T): "
-              f"{one_skill_rotation.turn_sequence}\n")
+    one_skill_rot = find_one_skill_rotation(all_rotations)
+    if one_skill_rot:
+        print(f"One skill rotation ({one_skill_rot.energy_generated} energy, "
+              f"{one_skill_rot.sp_cost_per_turn} SP/T): {one_skill_rot.turn_sequence}\n")
 
     return best_rotation

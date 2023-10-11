@@ -1,6 +1,5 @@
 """Module containing a specific algorithm for Blade."""
 
-from termcolor import colored
 from calculation_scripts.calculations_utils import (Rotation, get_char_info,
                                                     calculate_turn_energy, get_er_breakpoint)
 from characters import CharStats
@@ -68,17 +67,16 @@ def print_results_blade(stats: CharStats,
     """Specialized print function for Blade
     as his rotations include only enhanced basic attacks."""
 
-    char_info = get_char_info(stats.energy_recharge, user_input)
-    print(colored(char_info, "green"))
+    print(get_char_info(stats.energy_recharge, user_input))
 
     rotation = min(rotations,
                    key=lambda r: (r.num_turns, -r.skill_point_generated))
+    print(f"Enchanted Basic rotation ({rotation.energy_generated} energy, "
+          f"{rotation.sp_cost_per_turn} SP/turn): {rotation.turn_sequence}")
 
     er_breakpoint = get_er_breakpoint(rotation, stats.e_basic,
                                       stats.ult_cost, stats.init_energy)
-
-    print(f"Enchanted Basic rotation ({rotation.energy_generated} energy, "
-          f"{rotation.sp_cost_per_turn} SP/turn): {rotation.turn_sequence}")
-    print(f"ER needed for the next breakpoint: {er_breakpoint}%\n")
+    if er_breakpoint > 0:
+        print(f"ER needed for the next breakpoint: {er_breakpoint}%\n")
 
     return rotation

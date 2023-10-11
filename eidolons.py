@@ -3,9 +3,11 @@
 This module provides functionality for reading character Eidolons from a CSV file,
 storing them, as well as applying their bonuses."""
 
+from math import ceil, floor
 from dataclasses import dataclass
 from csv import DictReader
 from characters import CharStats
+from gui_scripts.gui_utils import UserInput
 
 
 EIDOLONS_CSV = "data/eidolons.csv"
@@ -27,7 +29,7 @@ class Eidolon:
     energy_value: int
 
 
-def apply_eidolons(stats: CharStats, char_name: str, eidolon_level: int) -> None:
+def apply_eidolons(stats: CharStats, user_input: UserInput) -> None:
     """Applies Eidolon bonuses to the character's stats.
 
     Args:
@@ -35,11 +37,12 @@ def apply_eidolons(stats: CharStats, char_name: str, eidolon_level: int) -> None
         - char_name: Name of the character.
         - eidolon_level: Level of the Eidolon to be applied."""
 
-    if eidolon_level == 0:
+    if user_input.eidolons == 0:
         return
 
-    applicable_eidolons = [e for e in EIDOLONS if e.char_name ==
-                           char_name and e.eidolon_level <= eidolon_level]
+    applicable_eidolons = [e for e in EIDOLONS
+                           if e.char_name == user_input.char_name
+                           and e.eidolon_level <= user_input.eidolons]
 
     if not applicable_eidolons:
         return
@@ -68,9 +71,16 @@ def apply_eidolons(stats: CharStats, char_name: str, eidolon_level: int) -> None
             stats.kill += energy_value
 
         elif eidolon_type == "serval":
-            stats.basic += energy_value
-            stats.skill += 2 * energy_value
-            stats.ult_act += 3 * energy_value
+            if user_input.enemy_count == 1:
+                stats.basic += energy_value
+                stats.skill += energy_value
+                stats.ult_act += energy_value
+            else:
+                # to prevent floor(1/2) = 0
+                basic_enemy_count = max(1, floor(user_input.enemy_count / 2))
+                stats.basic += basic_enemy_count * energy_value
+                stats.skill += ceil(user_input.enemy_count / 2) * energy_value
+                stats.ult_act += user_input.enemy_count * energy_value
 
         elif eidolon_type == "ult_kill":
             stats.ult_kill += energy_value

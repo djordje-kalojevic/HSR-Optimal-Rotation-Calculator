@@ -1,7 +1,5 @@
 """This module contains a specific algorithm for Dan Heng Imbibitor Lunae (DHIL)."""
 
-from pprint import pprint
-from termcolor import colored
 from calculation_scripts.calculations_utils import Rotation, calculate_turn_energy, get_char_info
 from characters import CharStats
 from gui_scripts.gui_utils import UserInput
@@ -14,7 +12,6 @@ def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput):
     which generate more energy (30, 35, 40 respectively).
     Their costs are 1, 2, and 3 skill points respectively."""
 
-    stats.basic *= stats.energy_recharge
     stats.e_basic = stats.basic + 10 * stats.energy_recharge
     stats.e_basic_2 = stats.basic + 15 * stats.energy_recharge
     stats.e_basic_3 = stats.basic + 20 * stats.energy_recharge
@@ -53,53 +50,54 @@ def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput):
     return all_rotations
 
 
-def print_results_dhil(energy_recharge, user_input, all_rotations: list[Rotation]):
+def print_results_dhil(energy_recharge: float, user_input: UserInput,
+                       all_rotations: list[Rotation]) -> Rotation:
     """Prints DHIL's various rotations. This includes his best, most effective rotation,
     as well as rotations with various skill point breakpoints.
     Such breakpoints include -0.5, -1.25, -1.5, -2, and -2.33 skill points per turn (SP/T)."""
 
-    char_info = get_char_info(energy_recharge, user_input)
-    print(colored(char_info, "green"))
-
-    best_rotation = min(all_rotations, key=get_best_rotation_sorting_key)
-    print(f"Best rotation ({best_rotation.energy_generated} energy, "
-          f"{best_rotation.sp_cost_per_turn} SP/T): {_order_turns_dhil(best_rotation)}")
-
-    neutral_rotation = min((r for r in all_rotations if r.skill_point_generated == 0),
-                           key=lambda r: get_best_rotation_sorting_key(r))
-    print(f"Neutral rotation ({neutral_rotation.energy_generated} energy): "
-          f"{_order_turns_dhil(neutral_rotation)}")
-
-    rotation_0_5 = min((r for r in all_rotations if r.sp_cost_per_turn >= -0.5),
-                       key=lambda r: get_best_general_sorting_key(r))
-    print(f"-0.5 SP/T rotation ({rotation_0_5.energy_generated} energy): "
-          f"{_order_turns_dhil(rotation_0_5)}")
-
-    rotation_1_25 = min((r for r in all_rotations if r.sp_cost_per_turn >= -1.25),
-                        key=lambda r: get_best_general_sorting_key(r))
-    print(f"-1.25 SP/T rotation ({rotation_1_25.energy_generated} energy): "
-          f"{_order_turns_dhil(rotation_1_25)}")
-
-    rotation_1_5 = min((r for r in all_rotations if r.sp_cost_per_turn >= -1.5),
-                       key=lambda r: get_best_general_sorting_key(r))
-    print(f"-1.5 SP/T rotation ({rotation_1_5.energy_generated} energy): "
-          f"{_order_turns_dhil(rotation_1_5)}")
-
-    rotation_2 = min((r for r in all_rotations if r.sp_cost_per_turn >= -2),
-                     key=lambda r: get_best_general_sorting_key(r))
-    print(f"-2 SP/T rotation ({rotation_2.energy_generated} energy): "
-          f"{_order_turns_dhil(rotation_2)}")
-
-    rotation_2_33 = min((r for r in all_rotations if r.sp_cost_per_turn >= -2.333),
-                        key=lambda r: get_best_general_sorting_key(r))
-    print(f"-2.33 SP/T rotation ({rotation_2_33.energy_generated} energy): "
-          f"{_order_turns_dhil(rotation_2_33)}")
+    best_rotation = get_best_dhil_rotation(energy_recharge,
+                                           user_input, all_rotations)
+    print_dhil_rotation(all_rotations, sp_cost_per_turn=0)
+    print_dhil_rotation(all_rotations, sp_cost_per_turn=-0.5)
+    print_dhil_rotation(all_rotations, sp_cost_per_turn=-1.25)
+    print_dhil_rotation(all_rotations, sp_cost_per_turn=-1.5)
+    print_dhil_rotation(all_rotations, sp_cost_per_turn=-2)
+    print_dhil_rotation(all_rotations, sp_cost_per_turn=-2.33)
     print("\n")
 
     return best_rotation
 
 
-def get_best_rotation_sorting_key(rotation: Rotation) -> tuple:
+def get_best_dhil_rotation(energy_recharge: float, user_input: UserInput,
+                           all_rotations: list[Rotation]) -> Rotation:
+    """Finds, prints and returns the best DHIL rotation."""
+
+    print(get_char_info(energy_recharge, user_input))
+
+    best_rot = min(all_rotations, key=_get_best_rotation_sorting_key)
+    print(f"Best rotation ({best_rot.energy_generated} energy, "
+          f"{best_rot.sp_cost_per_turn} SP/T): {_order_turns_dhil(best_rot)}")
+
+    return best_rot
+
+
+def print_dhil_rotation(all_rotations: list[Rotation], sp_cost_per_turn: float) -> None:
+    """Prints the best DHIL's rotation with the specified Skill Point cost per turn, or less."""
+
+    rotation = min((r for r in all_rotations
+                    if r.sp_cost_per_turn >= sp_cost_per_turn),
+                   key=lambda r: _get_best_general_sorting_key(r))
+
+    if sp_cost_per_turn == 0:
+        print(f"Neutral rotation ({rotation.energy_generated} energy): "
+              f"{_order_turns_dhil(rotation)}")
+    else:
+        print(f"{sp_cost_per_turn} SP/T rotation ({rotation.energy_generated} energy): "
+              f"{_order_turns_dhil(rotation)}")
+
+
+def _get_best_rotation_sorting_key(rotation: Rotation) -> tuple:
     """Dan Heng Imbibitor Lunae's rotations are sorted by the following criteria:
     their length, their skill point cost, and the number of his various attacks.
     This ensures a short, efficient rotation,
@@ -112,7 +110,7 @@ def get_best_rotation_sorting_key(rotation: Rotation) -> tuple:
     return sorting_key
 
 
-def get_best_general_sorting_key(rotation: Rotation) -> tuple:
+def _get_best_general_sorting_key(rotation: Rotation) -> tuple:
     """Dan Heng Imbibitor Lunae's (DHIL) rotations are sorted by the following criteria:
     their length, their skill point cost, and the number of his various attacks.
     This ensures a short rotation of specific skill point (SP) cost,
@@ -133,24 +131,21 @@ def _order_turns_dhil(rotation: Rotation) -> str:
     level 2 EBs, level 1 EBs, and Basic attacks respectively.
     These attacks are omitted if their occurrence equals 0."""
 
-    enhanced_basic_1_count = rotation.turns.count("EB1")
-    enhanced_basic_2_count = rotation.turns.count("EB2")
-    enhanced_basic_3_count = rotation.turns.count("EB3")
     turns = []
 
-    if enhanced_basic_3_count > 1:
-        turns.append(f"{enhanced_basic_3_count} x EB3")
-    elif enhanced_basic_3_count == 1:
+    if rotation.e_basic_3_count > 1:
+        turns.append(f"{rotation.e_basic_3_count} x EB3")
+    elif rotation.e_basic_3_count == 1:
         turns.append("EB3")
 
-    if enhanced_basic_2_count > 1:
-        turns.append(f"{enhanced_basic_2_count} x EB2")
-    elif enhanced_basic_2_count == 1:
+    if rotation.e_basic_2_count > 1:
+        turns.append(f"{rotation.e_basic_2_count} x EB2")
+    elif rotation.e_basic_2_count == 1:
         turns.append("EB2")
 
-    if enhanced_basic_1_count > 1:
-        turns.append(f"{enhanced_basic_1_count} x EB1")
-    elif enhanced_basic_1_count == 1:
+    if rotation.e_basic_count > 1:
+        turns.append(f"{rotation.e_basic_count} x EB1")
+    elif rotation.e_basic_count == 1:
         turns.append("EB1")
 
     if rotation.basic_count > 1:

@@ -8,7 +8,7 @@
     it prioritizes rotations with the lowest skill point cost,
     if multiple rotations are eligible."""
 
-import sys
+import colorama
 from PyQt6.QtWidgets import QApplication
 from gui_scripts.gui import MainWindowDemo
 from gui_scripts.gui_utils import configure_theme
@@ -18,11 +18,12 @@ def main() -> None:
     """Calculator's main function which incorporates the GUI,
     as well as all the calculations."""
 
-    app = QApplication(sys.argv)
+    app = QApplication([])
     configure_theme()
     dialog = MainWindowDemo()
     dialog.exec()
 
 
 if __name__ == '__main__':
+    colorama.init()
     main()

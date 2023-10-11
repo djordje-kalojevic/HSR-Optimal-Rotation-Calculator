@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional
+from termcolor import colored
 from characters import CharStats
 from gui_scripts.gui_utils import UserInput
 
@@ -175,7 +176,7 @@ def get_char_info(energy_recharge: float, user_input: UserInput) -> str:
         - Character's energy recharge
         - selected eidolon level
         - equipped Light Cone and support Light Cone
-        - selected ability"""
+        - selected trace"""
 
     energy_recharge = round(energy_recharge * 100, 3)
     char_info = f"E{user_input.eidolons} {user_input.char_name} with {energy_recharge}% ER"
@@ -188,10 +189,13 @@ def get_char_info(energy_recharge: float, user_input: UserInput) -> str:
         char_info += (f" and S{user_input.support_light_cone.superimposition + 1} "
                       f"{user_input.support_light_cone.name}")
 
-    if user_input.ability != "--Character Ability--":
-        char_info += f" and {user_input.ability}"
+    if user_input.trace != "--Character Trace--":
+        char_info += f" and {user_input.trace}"
 
-    return char_info
+    if user_input.technique:
+        char_info += f" + technique"
+
+    return colored(char_info, "green")
 
 
 def determine_initial_energy(stats: CharStats, user_input: UserInput) -> float:
@@ -256,6 +260,8 @@ def _get_ally_hit_energy(stats: CharStats, user_input: UserInput):
     if user_input.char_name == "Lynx":
         energy = 2 * stats.energy_recharge
     elif user_input.char_name == "Fu Xuan" and user_input.eidolons >= 4:
+        energy = 5 * stats.energy_recharge
+    elif user_input.char_name == "Clara":
         energy = 5 * stats.energy_recharge
     else:
         return 0

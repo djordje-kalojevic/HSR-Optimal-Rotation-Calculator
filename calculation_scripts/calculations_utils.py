@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Optional
 from termcolor import colored
 from characters import CharStats, HUOHUO_PERCENT_ENERGY_BONUSES

@@ -3,13 +3,10 @@
 This module provides functionality for reading Light Cones from a CSV file,
 storing them, as well as applying their bonuses."""
 
-from dataclasses import dataclass, field
 from csv import DictReader
-from typing import Optional, Literal
 from characters import CharStats
-
-
-LIGHT_CONES_CSV = "data/light_cones.csv"
+from dataclasses import dataclass, field
+from gui_scripts.counter import Counter
 
 
 @dataclass(slots=True)
@@ -31,9 +28,16 @@ class LightCone:
     is_event_reward: bool = False
     recharge_type: str = ""
     superimposition: int = 0
+    bonus: float = 0
     energy_values: list[float] = field(default_factory=lambda: [])
     triggered: bool = False
-    num_triggers: int | Literal["every turn"] = 0
+    trigger = Counter()
+
+    def update_lc_bonus(self) -> None:
+        self.bonus = self.energy_values[self.superimposition]
+
+
+LIGHT_CONES_CSV = "data/light_cones.csv"
 
 
 def _read_light_cones() -> dict[str, LightCone]:
@@ -62,9 +66,7 @@ def _read_light_cones() -> dict[str, LightCone]:
     return light_cones
 
 
-def apply_light_cones(stats: CharStats, light_cone: Optional[LightCone],
-                      support_light_cone: Optional[LightCone],
-                      char_name: str, enemy_count: int) -> None:
+def apply_light_cones(stats: CharStats, user_input) -> None:
     """Applies Light Cone bonuses to the character's stats.
 
     Args:
@@ -72,57 +74,63 @@ def apply_light_cones(stats: CharStats, light_cone: Optional[LightCone],
         - light_cone_name: Name of the LC.
         - superimposition: Superimposition rank of the LC."""
 
-    if light_cone:
-        apply_light_cone_bonus(stats, light_cone, char_name, enemy_count)
+    if user_input.light_cone:
+        apply_light_cone_bonus(stats, user_input)
 
-    if support_light_cone and support_light_cone.recharge_type == "battle_start":
-        apply_battle_start_support_lc(stats, support_light_cone)
+    if (user_input.support_light_cone and
+            user_input.support_light_cone.recharge_type == "battle_start"):
+        stats.init_energy += user_input.support_light_cone.bonus
 
 
-def apply_light_cone_bonus(stats: CharStats, light_cone: LightCone,
-                           char_name: str, enemy_count: int) -> None:
-    lc_bonus = light_cone.energy_values[light_cone.superimposition]
-    recharge_type = light_cone.recharge_type
+def apply_light_cone_bonus(stats: CharStats, user_input) -> None:
+    lc_bonus = user_input.light_cone.bonus
 
-    if recharge_type == "energy_recharge":
-        stats.energy_recharge += lc_bonus / 100
-
-    elif recharge_type == "battle_start":
-        stats.init_energy += lc_bonus
-
-    elif recharge_type == "attack":
-        stats.basic += lc_bonus
-        if stats.is_skill_attack:
+    match user_input.light_cone.recharge_type:
+        case "energy_recharge":
+            stats.energy_recharge += lc_bonus / 100
+        case "battle_start":
+            stats.init_energy += lc_bonus
+        case "skill":
             stats.skill += lc_bonus
-        if stats.is_ult_attack:
-            stats.ult_act += lc_bonus
+        case "attack":
+            _apply_on_attack_bonus(stats, lc_bonus)
+        case "attack_or_get_hit":
+            _apply_on_attack_or_get_hit_bonus(stats, lc_bonus)
+        case "echoes_coffin":
+            _apply_echoes_coffin_bonus(stats, user_input)
 
-    elif recharge_type == "skill":
+
+def _apply_on_attack_bonus(stats: CharStats, lc_bonus: float) -> None:
+    """Applies bonuses provided by attack-based Light Cones."""
+
+    stats.basic += lc_bonus
+    if stats.is_skill_attack:
+        stats.skill += lc_bonus * stats.is_skill_attack
+    if stats.is_ult_attack:
+        stats.ult_act += lc_bonus * stats.is_ult_attack
+
+
+def _apply_on_attack_or_get_hit_bonus(stats: CharStats, lc_bonus: float) -> None:
+    """Applies bonuses provided by Light Cones, triggered by attacking or getting hit."""
+
+    _apply_on_attack_bonus(stats, lc_bonus)
+    stats.get_hit += lc_bonus
+
+
+def _apply_echoes_coffin_bonus(stats: CharStats, user_input) -> None:
+    """Applies bonuses offered by the Echoes of the Coffin Light Cone.
+    It provides bonus energy based on the number of enemies hit, capping at 3."""
+
+    lc_bonus = user_input.light_cone.bonus
+
+    stats.basic += lc_bonus
+    if stats.is_skill_attack:
         stats.skill += lc_bonus
-
-    elif recharge_type == "attack_or_hit":
-        stats.basic += lc_bonus
-        if stats.is_skill_attack:
-            stats.skill += lc_bonus
-        if stats.is_ult_attack:
-            stats.ult_act += lc_bonus
-        stats.get_hit += lc_bonus
-
-    elif recharge_type == "echoes_coffin":
-        stats.basic += lc_bonus
-        if stats.is_skill_attack:
-            stats.skill += lc_bonus
-        if stats.is_ult_attack:
-            stats.ult_act += lc_bonus
-        elif char_name == "Luocha":
-            # Luocha's ultimate hits all enemies, however, Echoes of the Coffin stacks up to 3
-            count = min(enemy_count, 3)
-            stats.ult_act += count * lc_bonus
-
-
-def apply_battle_start_support_lc(stats: CharStats, support_light_cone: LightCone):
-    stats.init_energy += support_light_cone.energy_values[
-        support_light_cone.superimposition]
+    if stats.is_ult_attack and user_input.char_name == "Luocha":
+        count = min(user_input.enemy_count, 3)
+        stats.ult_act += count * lc_bonus
+    elif stats.is_ult_attack:
+        stats.ult_act += lc_bonus
 
 
 LIGHT_CONES = _read_light_cones()

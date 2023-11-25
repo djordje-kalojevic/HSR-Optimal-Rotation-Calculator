@@ -1,29 +1,20 @@
+"""This module contains a specific algorithm for Jingliu."""
+
+from copy import deepcopy
 from calculation_scripts.calculations_utils import Rotation, calculate_turn_energy
 from characters import CharStats
-from gui_scripts.gui_utils import UserInput
+from gui_scripts.user_input import UserInput
 from support_light_cones import apply_support_lcs
 
 
-def dfs_algorithm_jingliu(stats: CharStats, user_input: UserInput):
+def dfs_algorithm_jingliu(stats: CharStats, user_input: UserInput) -> list[Rotation]:
     """Jingliu possesses the ability to enter a buffed state when she gains enough Syzygy stacks.
     These stacks are gained by using Ultimates, Skills, technique.
     While she is in her buffed state, seh can only use Enhanced Skills at no Skill Point Cost."""
 
-    stats.e_skill = stats.skill
-    stats.skill -= 10 * stats.energy_recharge
-
-    curr_energy = stats.init_energy
-    syzygy_stacks = 0
-    if user_input.technique:
-        curr_energy += 15 * stats.energy_recharge
-        syzygy_stacks += 1 * user_input.technique
-
-    syzygy_stacks += 1 * user_input.assume_ult
-    bonus_syzygy_stack = 1 if user_input.eidolons == 6 else 0
-    skill_points_generated = 0
+    syzygy_stacks = _prep_init_stats(stats, user_input)
     all_rotations: list[Rotation] = []
-    stack: list = [(curr_energy, all_rotations,
-                    skill_points_generated, syzygy_stacks)]
+    stack = [(stats.init_energy, [], 0, syzygy_stacks)]
 
     while stack:
         curr_energy, turns, skill_points_generated, syzygy_stacks = stack.pop()
@@ -48,9 +39,11 @@ def dfs_algorithm_jingliu(stats: CharStats, user_input: UserInput):
                           syzygy_stacks + 1))
 
         # Jingliu enters buffed state where she can only use Enhanced Skills
-        if syzygy_stacks == 2:
-            syzygy_stacks += bonus_syzygy_stack
-            temp_user_input = user_input
+        elif syzygy_stacks == 2:
+            if user_input.eidolon_level == 6:
+                syzygy_stacks += 1
+
+            temp_user_input = deepcopy(user_input)
 
             while syzygy_stacks > 0:
                 curr_energy = apply_support_lcs(stats,
@@ -65,3 +58,15 @@ def dfs_algorithm_jingliu(stats: CharStats, user_input: UserInput):
                               skill_points_generated, syzygy_stacks))
 
     return all_rotations
+
+
+def _prep_init_stats(stats: CharStats, user_input: UserInput) -> int:
+    stats.e_skill = stats.skill
+    stats.skill -= 10 * stats.energy_recharge
+
+    syzygy_stacks = 1 * user_input.assume_ult
+    if user_input.technique:
+        stats.init_energy += 15 * stats.energy_recharge
+        syzygy_stacks += 1 * user_input.technique
+
+    return syzygy_stacks

@@ -1,4 +1,5 @@
 name,path,ult_cost,is_skill_attack,is_ult_attack,has_technique
+Argenti,Erudition,0,TRUE,TRUE,TRUE
 Arlan,Destruction,110,TRUE,TRUE,
 Asta,Harmony,120,TRUE,,
 Bailu,Abundance,100,,,
@@ -9,9 +10,12 @@ Dan Heng,Hunt,100,TRUE,TRUE,
 Dan Heng IL,Destruction,140,,TRUE,TRUE
 Fu Xuan,Preservation,135,,TRUE,TRUE
 Gepard,Preservation,100,TRUE,,
+Guinaifen,Nihility,120,TRUE,TRUE,
+Hanya,Harmony,0,TRUE,FALSE,
 Herta,Erudition,110,TRUE,TRUE,
 Himeko,Erudition,120,TRUE,TRUE,
 Hook,Destruction,120,TRUE,TRUE,
+HuoHuo,Abundance,140,,,
 Jing Yuan,Erudition,130,TRUE,TRUE,
 Jingliu,Destruction,140,TRUE,TRUE,TRUE
 Kafka,Nihility,120,TRUE,TRUE,
@@ -28,6 +32,7 @@ Serval,Erudition,100,TRUE,TRUE,
 Silver Wolf,Nihility,110,TRUE,TRUE,
 Sushang,Hunt,120,TRUE,TRUE,
 Tingyun,Harmony,130,,,
+Topaz,Hunt,130,TRUE,,TRUE
 Trailblazer (Destruction),Destruction,120,TRUE,TRUE,
 Trailblazer (Preservation),Preservation,120,,TRUE,
 Welt,Nihility,120,TRUE,TRUE,

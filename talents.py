@@ -3,9 +3,8 @@
 This module provides functionality for reading character talents from a CSV file,
 storing them, as well as applying their bonuses."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from csv import DictReader
-from characters import CharStats
 
 
 TALENTS_CSV = "data/talents.csv"
@@ -20,29 +19,17 @@ class Talent:
         - talent_name: Name of the talent.
         - talent_levels: List of talent levels."""
 
-    char_name: str
-    talent_name: str
-    talent_levels: list[float]
+    char_name: str = ""
+    talent_name: str = ""
+    talent_levels: list[float] = field(init=True, default_factory=list)
+    level: int = 0
+    energy: float = 0
 
-
-def apply_talents(stats: CharStats, char_name: str, talent_level: int) -> None:
-    """Applies talent bonuses to the character's stats.
-
-    Args:
-        - stats: Character's stats to be modified.
-        - char_name: Name of the character.
-        - talent_level: Level of the talent to be applied."""
-
-    talent = TALENTS.get(char_name)
-
-    if not talent or talent_level == 0:
-        return
-
-    if talent.char_name == "Pela":
-        additional_energy = talent.talent_levels[talent_level - 1]
-        stats.basic += additional_energy
-        stats.skill += additional_energy
-        stats.ult_act += additional_energy
+    def calculate_energy(self, talent_level):
+        if talent_level != 0:
+            self.energy = self.talent_levels[talent_level - 1]
+        else:
+            self.energy = self.talent_levels[0]
 
 
 def _read_talents() -> dict[str, Talent]:
@@ -59,7 +46,8 @@ def _read_talents() -> dict[str, Talent]:
         for row in reader:
             char_name = row["char_name"]
             talent_name = row["talent_name"]
-            talent_levels = [float(row[f"Level {i}"]) for i in range(1, 16)]
+            talent_levels = [row[f"Level {i}"] for i in range(1, 16)]
+            talent_levels = [float(value) for value in talent_levels if value]
             talent = Talent(char_name, talent_name, talent_levels)
 
             talents[char_name] = talent

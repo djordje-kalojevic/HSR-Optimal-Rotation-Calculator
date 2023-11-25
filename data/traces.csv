@@ -1,10 +1,11 @@
 char_name,trace_name,trace_type,value
 Hook,Playing With Fire (A6 trace),ult_act,5
 Jing Yuan,Savant Providence (A4 trace),battle_start,15
+Luka,Cycle Braking (A4 trace),,3
 Sampo,Defensive Position (A4 trace),ult_act,10
 Serval,String Vibration (A4 trace),battle_start,15
-Tingyun,Jubilant Passage (A6 trace),,5
+Tingyun,Jubilant Passage (A6 trace),turn,5
 Trailblazer (Destruction),Ready for Battle (A2 trace),battle_start,15
 Trailblazer (Preservation),Action Beats Overthinking (A6 trace),turn,5
 Welt,Judgment (A4 trace),ult_act,10
-Yukong,Majestas (A6 trace),yukong_majestas,2
+Yukong,Majestas (A6 trace),yukong,2

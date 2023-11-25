@@ -1,5 +1,5 @@
 """This module is responsible for applying all bonuses to the character's stats,
-and run all the necessary calculations.
+and running all the necessary calculations.
 
 These bonuses include:
     - Character bonuses (Eidolons, Talents, Traces)
@@ -17,20 +17,13 @@ These calculations include:
     it prioritizes rotations with the lowest skill point cost,
     if multiple rotations are eligible."""
 
-from .calculations_utils import Rotation, determine_initial_energy
-from .character_algorithms.default_algorithm import dfs_algorithm_default, print_results
-from .character_algorithms.blade_algorithm import dfs_algorithm_blade, print_results_blade
-from .character_algorithms.fu_xuan_algorithm import dfs_algorithm_fx
-from .character_algorithms.fire_mc_algorithm import dfs_algorithm_fire_mc
-from .character_algorithms.jingliu_algorithm import dfs_algorithm_jingliu
-from .character_algorithms.luka_algorithm import dfs_algorithm_luka
-from .character_algorithms.DHIL_algorithm import dfs_algorithm_dhil, print_results_dhil
-from .detailed_breakdown import print_detailed_breakdown
+from .character_algorithms.all_algorithms import apply_correct_algorithm, print_results
+from .calculations_utils import (determine_ally_hit_energy,
+                                 determine_initial_energy, remove_duplicate_rotations)
 from follow_ups import follow_up_attack_check
-from gui_scripts.gui_utils import UserInput
+from gui_scripts.user_input import UserInput
 from characters import CharStats
 from eidolons import apply_eidolons
-from talents import apply_talents
 from traces import apply_traces
 from light_cones import apply_light_cones
 from relics import apply_ornament, apply_rope
@@ -41,19 +34,10 @@ def run_calculations(stats: CharStats, user_input: UserInput) -> None:
     and prints their results to the console."""
 
     stats = _apply_bonuses(stats, user_input)
-    all_rotations = _apply_correct_algorithm(stats, user_input)
-
-    if user_input.char_name == "Blade":
-        best_rotation = print_results_blade(stats, user_input, all_rotations)
-
-    elif user_input.char_name == "Dan Heng IL":
-        best_rotation = print_results_dhil(stats.energy_recharge,
-                                           user_input, all_rotations)
-    else:
-        best_rotation = print_results(stats, user_input, all_rotations)
-
-    if user_input.detailed_breakdown:
-        print_detailed_breakdown(stats, user_input, best_rotation)
+    user_input.check_for_active_counters()
+    all_rotations = apply_correct_algorithm(stats, user_input)
+    unique_rotations = remove_duplicate_rotations(all_rotations)
+    print_results(stats, user_input, unique_rotations)
 
 
 def _apply_bonuses(stats: CharStats, user_input: UserInput) -> CharStats:
@@ -62,11 +46,8 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> CharStats:
     the adds bonuses that are not affected by ER, then returns those updated stats."""
 
     apply_eidolons(stats, user_input)
-    apply_talents(stats, user_input.char_name, user_input.talent_level)
     apply_traces(stats, user_input.trace)
-
-    apply_light_cones(stats, user_input.light_cone, user_input.support_light_cone,
-                      user_input.char_name, user_input.enemy_count)
+    apply_light_cones(stats, user_input)
     apply_rope(stats, user_input.rope)
     apply_ornament(stats, user_input.ornament)
 
@@ -74,9 +55,15 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> CharStats:
     if user_input.char_name == "Clara":
         stats.get_hit += stats.follow_up
 
-    stats.init_energy = determine_initial_energy(stats, user_input)
+    if user_input.char_name == "Pela" and user_input.talent:
+        stats.ult_act += user_input.talent.energy
+
+    determine_ally_hit_energy(stats, user_input)
+    determine_initial_energy(stats, user_input)
+
     stats.apply_energy_recharge(stats.energy_recharge)
 
+    # Raw energy bonuses (unaffected by Energy Recharge)
     if user_input.assume_tingyun_ult:
         stats.init_energy += 50
 
@@ -84,31 +71,3 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> CharStats:
         stats.init_energy += 60
 
     return stats
-
-
-def _apply_correct_algorithm(stats: CharStats, user_input: UserInput) -> list[Rotation]:
-    """Applies the correct Depth-First Search algorithm, that is,
-    certain characters have their own customized algorithms, others use the default one."""
-
-    if user_input.char_name == "Blade":
-        all_rotations = dfs_algorithm_blade(stats, user_input)
-
-    elif user_input.char_name == "Dan Heng IL":
-        all_rotations = dfs_algorithm_dhil(stats, user_input)
-
-    elif user_input.char_name == "Fu Xuan":
-        all_rotations = dfs_algorithm_fx(stats, user_input)
-
-    elif user_input.char_name == "Jingliu":
-        all_rotations = dfs_algorithm_jingliu(stats, user_input)
-
-    elif user_input.char_name == "Trailblazer (Preservation)":
-        all_rotations = dfs_algorithm_fire_mc(stats, user_input)
-
-    elif user_input.char_name == "Luka":
-        all_rotations = dfs_algorithm_luka(stats, user_input)
-
-    else:
-        all_rotations = dfs_algorithm_default(stats, user_input)
-
-    return all_rotations

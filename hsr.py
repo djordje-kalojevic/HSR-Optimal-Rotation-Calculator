@@ -24,6 +24,6 @@ def main() -> None:
     dialog.exec()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     colorama.init()
     main()

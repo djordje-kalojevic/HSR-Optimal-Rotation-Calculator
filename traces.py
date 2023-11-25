@@ -27,33 +27,30 @@ class Trace:
     value_bonus: int
 
 
-def apply_traces(stats: CharStats, name: str = "") -> None:
+def apply_traces(stats: CharStats, trace_name: str = "") -> None:
     """Applies trace bonuses to the character's stats.
 
     Args:
         - stats: Character's stats to be modified.
-        - name: Name of the trace."""
+        - trace_name: Name of the trace."""
 
-    trace = TRACES.get(name)
+    trace = TRACES.get(trace_name)
 
     if not trace:
         return
 
     value_bonus = trace.value_bonus
-    type = trace.type
 
-    if type == "battle_start":
-        stats.init_energy += value_bonus
-
-    elif type == "turn":
-        stats.basic += value_bonus
-        stats.skill += value_bonus
-
-    elif type == "ult_act":
-        stats.ult_act += value_bonus
-
-    elif type == "yukong_majestas":
-        stats.skill += 2 * value_bonus
+    match trace.type:
+        case "battle_start":
+            stats.init_energy += value_bonus
+        case "ult_act":
+            stats.ult_act += value_bonus
+        case "yukong":
+            stats.skill += 2 * value_bonus
+        case "turn":
+            stats.basic += value_bonus
+            stats.skill += value_bonus
 
 
 def _read_traces() -> dict[str, Trace]:

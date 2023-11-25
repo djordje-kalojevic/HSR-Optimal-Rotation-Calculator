@@ -6,15 +6,24 @@
     - additional parameters like the number of kills and hits taken."""
 
 from dataclasses import dataclass
-from typing import Literal, Optional
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
+from typing import Optional
 from PyQt6.QtCore import Qt
-from .widgets import (CharSelectorLayout, Combobox, EnemyInfoLayout, LightConeSelectionLayout,
-                      SupportLightConeSelectionLayout, RelicSelectionLayout,
-                      OptionsLayout, ButtonLayout, TooltipCheckBox)
-from .gui_utils import UserInput
-from .gui_utils import get_int_from_selector, get_int_or_literal_from_selector
+from PyQt6.QtWidgets import QWidget, QDialog, QVBoxLayout, QLabel
+
+from traces import TRACES
+from .widgets import Combobox, TooltipCheckBox, CounterInput
+from .layouts.button_layout import ButtonLayout
+from .layouts.character_selector import CharSelectorLayout
+from .layouts.enemy_info_layout import EnemyInfoLayout
+from .layouts.light_cone_selection import LightConeSelectionLayout
+from .layouts.options_layout import OptionsLayout
+from .layouts.relic_selection import RelicSelectionLayout
+from .layouts.support_light_cone_selection import SupportLightConeSelectionLayout
+from .gui_utils import get_int_from_selector
+from .user_input import UserInput
+from .counter import Counter
 from characters import CharStats, CHARACTERS
+from talents import TALENTS
 from light_cones import LIGHT_CONES
 from relics import Relic, ALL_RELICS
 from calculation_scripts.calculations import run_calculations
@@ -29,34 +38,38 @@ class MainWindowDemo(QDialog):
         self.setWindowTitle("HSR Rotation Calculator Demo")
         self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         self._setup_layout()
+        self.setMinimumWidth(650)
 
     def _setup_layout(self) -> None:
         """Creates and sets layout which allows user to input all the parameters."""
 
         layout = QVBoxLayout()
+        padding = QWidget()
 
-        layout.addWidget(QLabel(text="Character info:"))
+        layout.addWidget(QLabel(text="<u>Character info:</u>"))
         self.char_layout = CharSelectorLayout(self)
         layout.addLayout(self.char_layout)
 
-        layout.addWidget(QLabel(text="Equipment info:"))
+        layout.addWidget(padding)
+        layout.addWidget(QLabel(text="<u>Equipment info:</u>"))
         self.lc_layout = LightConeSelectionLayout(self)
         layout.addLayout(self.lc_layout)
-
         self.support_lc_layout = SupportLightConeSelectionLayout(self)
         layout.addLayout(self.support_lc_layout)
-
         self.relic_layout = RelicSelectionLayout(self)
         layout.addLayout(self.relic_layout)
 
-        layout.addWidget(QLabel(text="Enemy info:"))
+        layout.addWidget(padding)
+        layout.addWidget(QLabel(text="<u>Enemy info:</u>"))
         self.enemy_info_layout = EnemyInfoLayout(self)
         layout.addLayout(self.enemy_info_layout)
 
-        layout.addWidget(QLabel(text="Combat info:"))
+        layout.addWidget(padding)
+        layout.addWidget(QLabel(text="<u>Combat info:</u>"))
         self.options_layout = OptionsLayout(self)
         layout.addLayout(self.options_layout)
 
+        layout.addWidget(padding)
         self.button_layout = ButtonLayout(self)
         layout.addLayout(self.button_layout)
 
@@ -79,10 +92,8 @@ class MainWindowDemo(QDialog):
 
         if lcs:
             self.lc_layout.lc_selector.setEnabled(True)
-            self.lc_layout.lc_selector.addItems(
-                ["--Select Light Cone--"] + lcs)
-            self.lc_layout.lc_selector.setPlaceholderText(
-                "--Select Light Cone--")
+            self.lc_layout.lc_selector.addItems(lcs)
+            self.lc_layout.lc_selector.reset_selection()
         else:
             self.lc_layout.lc_selector.setPlaceholderText(
                 "No supported Light Cones found for this Path")
@@ -94,13 +105,16 @@ class MainWindowDemo(QDialog):
 
         self.button_layout.confirm_button.setEnabled(False)
 
-        combo_box: Combobox
         for combo_box in self.findChildren(Combobox):
             combo_box.reset_selection()
 
-        check_box: TooltipCheckBox
         for check_box in self.findChildren(TooltipCheckBox):
-            check_box.reset()
+            check_box.reset_selection()
+
+        for custom_widget in self.findChildren(CounterInput):
+            custom_widget.reset_selection()
+
+        self.char_layout.char_selector.setEnabled(True)
 
     def enable_confirm_button(self) -> None:
         self.button_layout.confirm_button.setEnabled(True)
@@ -129,6 +143,7 @@ class MainWindowDemo(QDialog):
         self._collect_gear_input()
         self._collect_combat_input()
         self._collect_other_input()
+
         self.user_input.cache("before-calculation")
 
     def _collect_char_input(self) -> None:
@@ -137,10 +152,24 @@ class MainWindowDemo(QDialog):
         as well as whether their technique was used before combat."""
 
         self.user_input.char_name = self.char_layout.char_selector.currentText()
-        self.user_input.eidolons = self.get_eidolons()
-        self.user_input.talent_level = self._get_talent_level()
-        self.user_input.trace = self.char_layout.trace_selector.currentText()
+        self.user_input.eidolon_level = self.get_eidolon_level()
+        self._collect_talent_input()
+        selected_trace = self.char_layout.trace_selector.currentText()
+        if selected_trace in TRACES.keys():
+            self.user_input.trace = selected_trace
         self.user_input.technique = self.char_layout.technique_check.checkbox.isChecked()
+
+    def _collect_talent_input(self):
+        self.user_input.talent = TALENTS.get(self.user_input.char_name)
+        if not self.user_input.talent:
+            return
+
+        self.user_input.talent.level = self._get_talent_level()
+        if self.user_input.talent.level == 0:
+            return
+
+        self.user_input.talent.calculate_energy(self.user_input.talent.level)
+        self.user_input.num_talent_triggers = self._get_talent_num_triggers()
 
     def _collect_gear_input(self) -> None:
         """Collects gear input, this includes:
@@ -151,7 +180,7 @@ class MainWindowDemo(QDialog):
         self.user_input.light_cone = self._get_light_cone()
         self.user_input.support_light_cone = self._get_support_light_cone()
         if self.user_input.support_light_cone:
-            self.user_input.support_light_cone.num_triggers = self._get_support_lc_triggers()
+            self.user_input.support_light_cone.trigger = self._get_support_lc_triggers()
 
         self.user_input.relic = self._get_relic()
         self.user_input.num_relic_trigger = self._get_relic_trigger()
@@ -178,69 +207,111 @@ class MainWindowDemo(QDialog):
         user_input.matching_enemy_weakness = (
             self.enemy_info_layout.enemy_weakness.checkbox.isChecked())
         user_input.enemy_count = self._get_enemy_count()
+        user_input.huohuo_ult_level = self._get_huohuo_ult_level()
 
     def _get_light_cone(self):
         light_cone_name = self.lc_layout.lc_selector.currentText()
         light_cone = LIGHT_CONES.get(light_cone_name)
-        if light_cone:
-            light_cone.superimposition = self.lc_layout.si_selector.currentIndex()
-            return light_cone
+        if not light_cone:
+            return None
 
-        return None
+        light_cone.superimposition = self.lc_layout.si_selector.currentIndex() - 1
+        light_cone.update_lc_bonus()
+
+        return light_cone
 
     def _get_support_light_cone(self):
         support_light_cone_name = self.support_lc_layout.lc_selector.currentText()
         support_light_cone = LIGHT_CONES.get(support_light_cone_name)
-        if support_light_cone:
-            support_light_cone.superimposition = self.support_lc_layout.si_selector.currentIndex()
-            return support_light_cone
+        if not support_light_cone:
+            return None
 
-        return None
+        support_light_cone.superimposition = self.support_lc_layout.si_selector.currentIndex() - 1
+        support_light_cone.update_lc_bonus()
 
-    def get_eidolons(self) -> int:
-        """Returns the selected number of eidolons."""
+        return support_light_cone
+
+    def get_eidolon_level(self) -> int:
+        """Returns the selected Eidolons level."""
         return get_int_from_selector(self.char_layout.eidolons_selector)
 
     def _get_talent_level(self) -> int:
         """Returns the selected talent level."""
-        return get_int_from_selector(self.char_layout.talent_selector)
+        # return get_int_from_selector(self.char_layout.talent_selector)
+        return self.char_layout.talent_selector.get_num_input()
 
-    def _get_support_lc_triggers(self) -> int | Literal["every turn"]:
+    def _get_talent_num_triggers(self) -> Counter:
+        """Returns the selected number of talent triggers."""
+        trigger_input = self.char_layout.talent_trigger_input
+
+        num_triggers = trigger_input.get_num_input()
+        every_turn_check = trigger_input.repeats_every_turn()
+        return Counter(num_triggers, every_turn_check)
+
+    def _get_support_lc_triggers(self) -> Counter:
         """Returns the selected number of relic triggers."""
-        return get_int_or_literal_from_selector(self.support_lc_layout.trigger_input)
+        trigger_input = self.support_lc_layout.trigger_input
+
+        num_triggers = trigger_input.get_num_input()
+        every_turn_check = trigger_input.repeats_every_turn()
+        return Counter(num_triggers, every_turn_check)
 
     def _get_relic(self) -> Optional[Relic]:
         """Returns the selected relic object."""
         relic_name = self.relic_layout.relic_selector.currentText()
         return ALL_RELICS.get(relic_name)
 
-    def _get_relic_trigger(self) -> int | Literal["every turn"]:
+    def _get_relic_trigger(self) -> Counter:
         """Returns the selected number of relic triggers."""
-        return get_int_or_literal_from_selector(self.relic_layout.relic_trigger_input)
+        trigger_input = self.relic_layout.relic_trigger_input
 
-    def _get_hits_taken(self) -> int | Literal["every turn"]:
+        num_triggers = trigger_input.get_num_input()
+        every_turn_check = trigger_input.repeats_every_turn()
+        return Counter(num_triggers, every_turn_check)
+
+    def _get_hits_taken(self) -> Counter:
         """Returns the selected number of hits taken."""
-        return get_int_or_literal_from_selector(self.options_layout.combo_boxes.hits_taken_cb)
+        trigger_input = self.options_layout.combo_boxes.hits_taken_cb
 
-    def _get_ally_hits_taken(self) -> int | Literal["every turn"]:
+        num_triggers = trigger_input.get_num_input()
+        every_turn_check = trigger_input.repeats_every_turn()
+        return Counter(num_triggers, every_turn_check)
+
+    def _get_ally_hits_taken(self) -> Counter:
         """Returns the selected number of hits taken."""
-        return get_int_or_literal_from_selector(self.options_layout.combo_boxes.ally_hits_taken_cb)
+        trigger_input = self.options_layout.combo_boxes.ally_hits_taken_cb
 
-    def _get_num_follow_ups(self) -> int | Literal["every turn"]:
+        num_triggers = trigger_input.get_num_input()
+        every_turn_check = trigger_input.repeats_every_turn()
+        return Counter(num_triggers, every_turn_check)
+
+    def _get_num_follow_ups(self) -> Counter:
         """Returns the selected number of follow-up attacks."""
-        return get_int_or_literal_from_selector(self.char_layout.follow_up_selector)
+        trigger_input = self.char_layout.follow_up_selector
 
-    def _get_kills(self) -> int | Literal["every turn"]:
+        num_triggers = trigger_input.get_num_input()
+        every_turn_check = trigger_input.repeats_every_turn()
+        return Counter(num_triggers, every_turn_check)
+
+    def _get_kills(self) -> Counter:
         """Returns the selected number of kills."""
-        return get_int_or_literal_from_selector(self.options_layout.combo_boxes.kills_input)
+        trigger_input = self.options_layout.combo_boxes.kills_input
+
+        num_triggers = trigger_input.get_num_input()
+        every_turn_check = trigger_input.repeats_every_turn()
+        return Counter(num_triggers, every_turn_check)
 
     def _get_ult_kills(self) -> int:
         """Returns the selected number of ult kills."""
-        return get_int_from_selector(self.options_layout.combo_boxes.ult_kills_input)
+        trigger_input = self.options_layout.combo_boxes.ult_kills_input
+        return trigger_input.get_num_input()
 
     def _get_enemy_count(self) -> int:
         """Returns the selected number of enemies.
         If no input is detected the default value is one enemy."""
+        enemy_count = self.enemy_info_layout.enemy_count
+        return enemy_count.get_num_input()
 
-        enemy_count = get_int_from_selector(self.enemy_info_layout.enemy_count)
-        return enemy_count if enemy_count != 0 else 1
+    def _get_huohuo_ult_level(self) -> int:
+        """Returns the input level of HuoHuo's Ultimate."""
+        return self.options_layout.combo_boxes.huohuo_ult_input.get_num_input()

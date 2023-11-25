@@ -1,21 +1,18 @@
+"""This module contains a specific algorithm for Fu Xuan."""
+
 from calculation_scripts.calculations_utils import Rotation, calculate_turn_energy
 from characters import CharStats
-from gui_scripts.gui_utils import UserInput
+from gui_scripts.user_input import UserInput
 from support_light_cones import apply_support_lcs
 
 
-def dfs_algorithm_fx(stats: CharStats, user_input: UserInput):
+def dfs_algorithm_fx(stats: CharStats, user_input: UserInput) -> list[Rotation]:
     """Fu Xuan's skill creates a matrix field for 3 turns.
     Using another skill during this time will generate additional energy."""
 
-    stats.e_skill = stats.skill + 20 * stats.energy_recharge
-
-    curr_energy = stats.init_energy
-    matrix_duration = 2 if user_input.technique else 0
-    skill_points_generated = 0
+    matrix_duration = _prep_init_stats(stats, user_input)
     all_rotations: list[Rotation] = []
-    stack: list = [(curr_energy, all_rotations,
-                    skill_points_generated, matrix_duration)]
+    stack = [(stats.init_energy, [], 0, matrix_duration)]
 
     while stack:
         curr_energy, turns, skill_points_generated, matrix_duration = stack.pop()
@@ -30,17 +27,31 @@ def dfs_algorithm_fx(stats: CharStats, user_input: UserInput):
 
         # Fu Xuan uses Skill
         if matrix_duration == 0:
+            new_matrix_duration = 3
             stack.append((curr_energy + stats.skill + turn_energy,
-                          turns + ["SKILL"], skill_points_generated - 1, 3))
+                          turns + ["SKILL"],
+                          skill_points_generated - 1,
+                          new_matrix_duration))
 
         # Fu Xuan uses Enhanced Skill
         elif matrix_duration > 0:
+            new_matrix_duration = 3
             stack.append((curr_energy + stats.e_skill + turn_energy,
-                          turns + ["E. SKILL"], skill_points_generated + 1, 3))
+                          turns + ["E. SKILL"],
+                          skill_points_generated - 1,
+                          new_matrix_duration))
 
         # Fu Xuan uses Basic attack
         stack.append((curr_energy + stats.basic + turn_energy,
-                      turns + ["BASIC"], skill_points_generated + 1,
+                      turns + ["BASIC"],
+                      skill_points_generated + 1,
                       matrix_duration - 1))
 
     return all_rotations
+
+
+def _prep_init_stats(stats: CharStats, user_input: UserInput) -> int:
+    stats.e_skill = stats.skill + 20 * stats.energy_recharge
+    matrix_duration = 2 if user_input.technique else 0
+
+    return matrix_duration

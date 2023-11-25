@@ -3,7 +3,7 @@ Light Cones that can be equipped on another character and still provide their bo
 
 
 from characters import CharStats
-from gui_scripts.gui_utils import UserInput
+from gui_scripts.user_input import UserInput
 from light_cones import LightCone
 
 
@@ -14,55 +14,49 @@ def apply_support_lcs(stats: CharStats,
     After which it returns the new current energy value."""
 
     if (not user_input.support_light_cone
-            or user_input.support_light_cone.recharge_type == "battle_start"):
+            or user_input.support_light_cone.trigger.num_triggers == 0):
         return curr_energy
 
-    if user_input.support_light_cone.recharge_type == "temp_energy_recharge":
-        apply_temp_er_support_lc(stats, user_input.support_light_cone,
-                                 user_input.support_light_cone.num_triggers)
+    num_triggers = user_input.support_light_cone.trigger.num_triggers
 
-    if user_input.support_light_cone.num_triggers == 0:
-        return curr_energy
-
-    elif user_input.support_light_cone.recharge_type == "bonus_energy":
-        curr_energy = apply_bonus_energy_support_lc(curr_energy,
-                                                    user_input.support_light_cone)
-
-    elif user_input.support_light_cone.name == "Quid Pro Quo":
-        curr_energy = apply_quid_pro_quo_lc(stats.ult_cost, curr_energy,
-                                            user_input.support_light_cone)
-
-    if (user_input.support_light_cone.num_triggers != "every turn"
-            and user_input.support_light_cone.num_triggers > 0):
-        user_input.support_light_cone.num_triggers -= 1
+    if user_input.support_light_cone.trigger.repeat_every_turn:
+        for _ in range(num_triggers):
+            curr_energy = apply_support_lc(stats, user_input.support_light_cone,
+                                           curr_energy, num_triggers)
+    elif num_triggers > 0:
+        curr_energy = apply_support_lc(stats, user_input.support_light_cone,
+                                       curr_energy, num_triggers)
+        user_input.support_light_cone.trigger.num_triggers -= 1
 
     return curr_energy
 
 
-def apply_bonus_energy_support_lc(curr_energy: float,
-                                  support_light_cone: LightCone) -> float:
-    curr_energy += support_light_cone.energy_values[support_light_cone.superimposition]
-    return curr_energy
+def apply_support_lc(stats: CharStats, support_light_cone: LightCone,
+                     curr_energy: float, num_triggers: int) -> float:
+    """Applies Support Light Cone's bonus."""
 
-
-def apply_quid_pro_quo_lc(ult_cost: float, curr_energy: float,
-                          support_light_cone: LightCone) -> float:
-    if curr_energy <= ult_cost / 2:
-        curr_energy += support_light_cone.energy_values[support_light_cone.superimposition]
+    match support_light_cone.recharge_type:
+        case "bonus_energy":
+            curr_energy += support_light_cone.bonus * num_triggers
+        case "temp_energy_recharge":
+            apply_temp_er_support_lc(stats, support_light_cone, num_triggers)
+        case "quid_pro_quo":
+            curr_energy += apply_quid_pro_quo_lc(stats.ult_cost, curr_energy,
+                                                 support_light_cone)
 
     return curr_energy
 
 
 def apply_temp_er_support_lc(stats: CharStats,
-                             support_light_cone: LightCone, num_triggers: int | str):
+                             support_light_cone: LightCone, num_triggers: int | str) -> None:
     """Allows for the application of Light Cones that give temporary boosts to energy recharge.
     This is achieved by cache the stat values before the application,
     then retrieving those after the buff wears off.
     This is done in such a way because of how computers interpret float values."""
 
-    lc_bonus = support_light_cone.energy_values[support_light_cone.superimposition] / 100
+    lc_bonus = support_light_cone.bonus / 100
 
-    if not support_light_cone.triggered and num_triggers != 0:
+    if not support_light_cone.triggered and num_triggers > 0:
         stats.cache("before_carve_the_moon")
         stats.apply_energy_recharge(stats.energy_recharge + lc_bonus)
         support_light_cone.triggered = True
@@ -70,4 +64,13 @@ def apply_temp_er_support_lc(stats: CharStats,
     elif support_light_cone.triggered and num_triggers == 0:
         stats.retrieve_cache("before_carve_the_moon")
         support_light_cone.triggered = False
-        stats.retrieve_cache("before_carve_the_moon")
+
+
+def apply_quid_pro_quo_lc(ult_cost: float, curr_energy: float,
+                          support_light_cone: LightCone) -> float:
+    """Quid Pro Quo Light Cone grants additional energy when the current energy is at or below 50%."""
+
+    if curr_energy <= ult_cost / 2:
+        return support_light_cone.bonus
+
+    return 0

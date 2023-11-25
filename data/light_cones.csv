@@ -8,6 +8,7 @@ Fine Fruit,Abundance,3*,TRUE,,battle_start,6,7,9,11,12
 Make the World Clamor,Erudition,4*,,,battle_start,20,23,26,29,32
 Memories of the Past,Harmony,4*,,,attack,4,5,6,7,8
 Meshing Cogs,Harmony,3*,,,attack_or_get_hit,4,5,6,7,8
+Night of Fright,Abundance,5*,,,energy_recharge,12,14,16,18,20
 Passkey,Erudition,3*,,,skill,8,9,10,11,12
 Post-Op Conversation,Abundance,4*,,,energy_recharge,8,10,12,14,16
 Quid Pro Quo,Abundance,4*,TRUE,,quid_pro_quo,8,10,12,14,16

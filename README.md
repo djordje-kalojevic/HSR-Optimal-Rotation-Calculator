@@ -22,7 +22,7 @@ Calculate a one-skill rotation to see if it aligns with buff/debuff durations, s
 This mode prioritizes rotations with minimal skill point cost.
 
 - **Specialized algorithms for certain characters:**\
-These characters posses unique attacks or additional ways of generating energy. These currently include: Blade, Dan Heng Imbibitor Lunae, Trailblazer (Preservation), i.e., Fire MC, and Luka.
+These characters posses unique attacks or additional ways of generating energy. These currently include: Arlan, Blade, Dan Heng Imbibitor Lunae, Fu Xuan, Jingliu, Luka, Topaz, and Trailblazer (Preservation), i.e., Fire MC.
 
 - **Detailed energy breakdown:**\
 This option will list all the energy sources and the amount of energy they have generated. 
@@ -35,7 +35,7 @@ The calculator supports a wide range of customization options, including:
 - Their associated eidolons, traces, talents, and techniques
 - Equipped Light Cones, support Light Cones, as well as relics, ornaments and energy recharge ropes
 - Numbers of kills, hits taken, etc. assumed during the rotation
-- Team buffs (e.g. Tingyun Ultimate)
+- Team buffs (e.g. Tingyun and HuoHuo Ultimate)
 
 The results of these calculations are then presented via the terminal interface.
 

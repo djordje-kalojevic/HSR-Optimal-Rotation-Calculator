@@ -22,7 +22,7 @@ PyQt6-sip==13.6.0
 pyqtdarktheme==0.1.7
 pywin32-ctypes==0.2.2
 setuptools==69.0.2
-termcolor==2.3.0
+termcolor==2.4.0
 whichcraft==0.6.1
 zope.event==5.0
 zope.interface==6.1

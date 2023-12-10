@@ -18,10 +18,9 @@ These calculations include:
     if multiple rotations are eligible."""
 
 from .character_algorithms.all_algorithms import apply_correct_algorithm, print_results
-from .calculations_utils import (determine_ally_hit_energy,
-                                 determine_initial_energy, remove_duplicate_rotations)
-from follow_ups import follow_up_attack_check
+from .calculations_utils import determine_ally_hit_energy, determine_initial_energy
 from gui_scripts.user_input import UserInput
+from follow_ups import follow_up_attack_check
 from characters import CharStats
 from eidolons import apply_eidolons
 from traces import apply_traces
@@ -35,8 +34,8 @@ def run_calculations(stats: CharStats, user_input: UserInput) -> None:
 
     stats = _apply_bonuses(stats, user_input)
     user_input.check_for_active_counters()
-    all_rotations = apply_correct_algorithm(stats, user_input)
-    unique_rotations = remove_duplicate_rotations(all_rotations)
+    unique_rotations = apply_correct_algorithm(stats, user_input)
+    unique_rotations.process_rotation_data(user_input.char_name)
     print_results(stats, user_input, unique_rotations)
 
 

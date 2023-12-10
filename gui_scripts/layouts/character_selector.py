@@ -13,7 +13,7 @@ from traces import TRACES
 
 
 @dataclass
-class CharSelectorLayout(QGridLayout):
+class CharacterSelectorLayout(QGridLayout):
     """Layout which is responsible for input of all parameters related to characters,
     i.e., their name, Eidolons, talents, traces, and follow-up attacks."""
 
@@ -90,7 +90,7 @@ class CharSelectorLayout(QGridLayout):
         self._enable_huohuo_ult(parent, char_name)
 
     def _enable_ult_kills_input(self, parent, char: Character) -> None:
-        options: CheckboxOptionsLayout = parent.options_layout.combo_boxes
+        options: ComboboxOptionsLayout = parent.options_layout.combo_boxes
         if char.is_ult_attack:
             options.ult_kills_input.setEnabled(True)
 

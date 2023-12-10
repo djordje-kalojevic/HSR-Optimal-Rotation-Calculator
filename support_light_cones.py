@@ -48,7 +48,7 @@ def apply_support_lc(stats: CharStats, support_light_cone: LightCone,
 
 
 def apply_temp_er_support_lc(stats: CharStats,
-                             support_light_cone: LightCone, num_triggers: int | str) -> None:
+                             support_light_cone: LightCone, num_triggers: int) -> None:
     """Allows for the application of Light Cones that give temporary boosts to energy recharge.
     This is achieved by cache the stat values before the application,
     then retrieving those after the buff wears off.

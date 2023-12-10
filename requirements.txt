@@ -1,9 +1,18 @@
-altgraph==0.17.4
-auto-py-to-exe==2.42.0
-bottle==0.12.25
-bottle-websocket==0.2.9
-cffi==1.16.0
+asttokens==2.4.1
 colorama==0.4.6
+<<<<<<< HEAD
+darkdetect==0.7.1
+executing==2.0.1
+psutil==5.9.6
+Pygments==2.17.2
+PyQt6==6.6.1
+PyQt6-Qt6==6.6.1
+PyQt6-sip==13.6.0
+pyqtdarktheme==2.1.0
+rbloom==1.4.5
+six==1.16.0
+termcolor==2.4.0
+=======
 darkdetect==0.8.0
 Eel==0.16.0
 future==0.18.3
@@ -26,3 +35,4 @@ termcolor==2.4.0
 whichcraft==0.6.1
 zope.event==5.0
 zope.interface==6.1
+>>>>>>> 7d1141ad97ec2c11fbbfa75529caff614d2c27b8

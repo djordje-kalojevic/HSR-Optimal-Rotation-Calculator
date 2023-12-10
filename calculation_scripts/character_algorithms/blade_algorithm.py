@@ -4,28 +4,28 @@ from characters import CharStats
 from ..detailed_breakdown import print_detailed_breakdown
 from gui_scripts.user_input import UserInput
 from support_light_cones import apply_support_lcs
+from calculation_scripts.rotation import RotationList
 from calculation_scripts.calculations_utils import (
-    Rotation, find_best_rotation,
-    print_char_info, calculate_turn_energy,
+    find_best_rotation, print_char_info, calculate_turn_energy,
     print_er_threshold, print_rotation_info)
 
 
-def dfs_algorithm_blade(stats: CharStats, user_input: UserInput) -> list[Rotation]:
+def dfs_algorithm_blade(stats: CharStats, user_input: UserInput) -> RotationList:
     """Blade possesses the ability to use enhanced basic attacks that generate more energy.
     Skill grants 3 charges for these attacks, and does not end turn.
     Additionally he can perform follow-up attacks which cost 5 stacks (4 with Eidolon 6).
     These stacks are gained by attacking, using skills, using ultimates, or being attacked."""
 
     follow_up_cost, blade_stacks = _prep_init_stats(stats, user_input)
-    all_rotations: list[Rotation] = []
+    all_rotations = RotationList()
     stack = [(stats.init_energy, [], 0, 0, blade_stacks)]
 
     while stack:
         curr_energy, turns, skill_points_generated, e_basic_charges, blade_stacks = stack.pop()
 
         if curr_energy >= stats.ult_cost:
-            rotation = Rotation(curr_energy, turns, skill_points_generated)
-            all_rotations.append(rotation)
+            all_rotations.add_rotation(curr_energy, turns,
+                                       skill_points_generated)
             continue
 
         blade_stacks = _gain_stacks(user_input, blade_stacks)
@@ -65,7 +65,7 @@ def _gain_stacks(user_input: UserInput, stacks: int) -> int:
     return stacks
 
 
-def _prep_init_stats(stats: CharStats, user_input: UserInput) -> int:
+def _prep_init_stats(stats: CharStats, user_input: UserInput) -> tuple[int, int]:
     stats.e_basic = stats.basic + 10 * stats.energy_recharge
 
     follow_up_cost = 5
@@ -77,11 +77,12 @@ def _prep_init_stats(stats: CharStats, user_input: UserInput) -> int:
     return follow_up_cost, blade_stacks
 
 
-def print_results_blade(stats: CharStats, user_input: UserInput, rotations: list[Rotation]):
+def print_results_blade(stats: CharStats, user_input: UserInput,
+                        rotations: RotationList) -> None:
     """Specialized print function for Blade
     as his rotations include only enhanced basic attacks."""
 
-    print_char_info(stats.energy_recharge, user_input)
+    print_char_info(stats, user_input)
 
     best_rotation = find_best_rotation(rotations)
     print_rotation_info("Enchanted Basic rotation", best_rotation)

@@ -1,27 +1,28 @@
 """This module contains a specific algorithm for Jingliu."""
 
 from copy import deepcopy
-from calculation_scripts.calculations_utils import Rotation, calculate_turn_energy
 from characters import CharStats
 from gui_scripts.user_input import UserInput
 from support_light_cones import apply_support_lcs
+from calculation_scripts.rotation import RotationList
+from calculation_scripts.calculations_utils import calculate_turn_energy
 
 
-def dfs_algorithm_jingliu(stats: CharStats, user_input: UserInput) -> list[Rotation]:
+def dfs_algorithm_jingliu(stats: CharStats, user_input: UserInput) -> RotationList:
     """Jingliu possesses the ability to enter a buffed state when she gains enough Syzygy stacks.
     These stacks are gained by using Ultimates, Skills, technique.
     While she is in her buffed state, seh can only use Enhanced Skills at no Skill Point Cost."""
 
     syzygy_stacks = _prep_init_stats(stats, user_input)
-    all_rotations: list[Rotation] = []
+    all_rotations = RotationList()
     stack = [(stats.init_energy, [], 0, syzygy_stacks)]
 
     while stack:
         curr_energy, turns, skill_points_generated, syzygy_stacks = stack.pop()
 
         if curr_energy >= stats.ult_cost:
-            rotation = Rotation(curr_energy, turns, skill_points_generated)
-            all_rotations.append(rotation)
+            all_rotations.add_rotation(curr_energy, turns,
+                                       skill_points_generated)
             continue
 
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)

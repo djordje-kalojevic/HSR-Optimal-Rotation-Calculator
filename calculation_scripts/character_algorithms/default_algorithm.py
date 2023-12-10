@@ -5,29 +5,28 @@ from characters import CharStats
 from ..detailed_breakdown import print_detailed_breakdown
 from gui_scripts.user_input import UserInput
 from support_light_cones import apply_support_lcs
+from calculation_scripts.rotation import RotationList
 from calculation_scripts.calculations_utils import (
-    Rotation, calculate_turn_energy,
-    find_basic_only_rotation, find_best_rotation,
-    find_neutral_rotation, find_one_skill_rotation,
-    find_skill_only_rotation, print_char_info,
-    print_er_threshold, print_rotation_info)
+    calculate_turn_energy, find_basic_only_rotation, find_best_rotation,
+    find_neutral_rotation, find_one_skill_rotation, find_skill_only_rotation,
+    print_char_info, print_er_threshold, print_rotation_info)
 
 
-def dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> list[Rotation]:
+def dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> RotationList:
     """Default Depth-First Search algorithm that determines
     the shortest and most skill-point positive rotation.
     Positive rotations are defined as those that use more basic attacks than skills,
     as the former generate skill points, and the latter consume them."""
 
-    all_rotations: list[Rotation] = []
+    all_rotations = RotationList()
     stack = [(stats.init_energy, [], 0)]
 
     while stack:
         curr_energy, turns, skill_points_generated = stack.pop()
 
         if curr_energy >= stats.ult_cost:
-            rotation = Rotation(curr_energy, turns, skill_points_generated)
-            all_rotations.append(rotation)
+            all_rotations.add_rotation(curr_energy, turns,
+                                       skill_points_generated)
             continue
 
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)
@@ -44,7 +43,7 @@ def dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> list[Rotat
     return all_rotations
 
 
-def print_results_default(stats: CharStats, user_input: UserInput, all_rotations: list[Rotation]):
+def print_results_default(stats: CharStats, user_input: UserInput, all_rotations: RotationList):
     """Prints various rotation results, for example, the following:
         - character info: their name, energy recharge,
         Light Cone that's equipped and its superimposition
@@ -58,7 +57,7 @@ def print_results_default(stats: CharStats, user_input: UserInput, all_rotations
         it prioritizes rotations with the lowest skill point cost
         if multiple rotations are eligible."""
 
-    print_char_info(stats.energy_recharge, user_input)
+    print_char_info(stats, user_input)
 
     best_rotation = find_best_rotation(all_rotations)
     print_rotation_info("Most optimal rotation", best_rotation)

@@ -1,5 +1,5 @@
 name,path,ult_cost,is_skill_attack,is_ult_attack,has_technique
-Argenti,Erudition,0,TRUE,TRUE,TRUE
+Argenti,Erudition,180,TRUE,TRUE,TRUE
 Arlan,Destruction,110,TRUE,TRUE,
 Asta,Harmony,120,TRUE,,
 Bailu,Abundance,100,,,
@@ -11,7 +11,7 @@ Dan Heng IL,Destruction,140,,TRUE,TRUE
 Fu Xuan,Preservation,135,,TRUE,TRUE
 Gepard,Preservation,100,TRUE,,
 Guinaifen,Nihility,120,TRUE,TRUE,
-Hanya,Harmony,0,TRUE,FALSE,
+Hanya,Harmony,140,TRUE,FALSE,
 Herta,Erudition,110,TRUE,TRUE,
 Himeko,Erudition,120,TRUE,TRUE,
 Hook,Destruction,120,TRUE,TRUE,

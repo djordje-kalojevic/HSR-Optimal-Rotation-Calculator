@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import QWidget, QDialog, QVBoxLayout, QLabel
 from traces import TRACES
 from .widgets import Combobox, TooltipCheckBox, CounterInput
 from .layouts.button_layout import ButtonLayout
-from .layouts.character_selector import CharSelectorLayout
+from .layouts.character_selector import CharacterSelectorLayout
 from .layouts.enemy_info_layout import EnemyInfoLayout
 from .layouts.light_cone_selection import LightConeSelectionLayout
 from .layouts.options_layout import OptionsLayout
@@ -47,7 +47,7 @@ class MainWindowDemo(QDialog):
         padding = QWidget()
 
         layout.addWidget(QLabel(text="<u>Character info:</u>"))
-        self.char_layout = CharSelectorLayout(self)
+        self.char_layout = CharacterSelectorLayout(self)
         layout.addLayout(self.char_layout)
 
         layout.addWidget(padding)

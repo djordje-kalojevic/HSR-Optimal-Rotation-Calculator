@@ -1,12 +1,13 @@
 """This module contains a specific algorithm for Trailblazer (Preservation), i.e., Fire MC."""
 
-from calculation_scripts.calculations_utils import Rotation, calculate_turn_energy
 from characters import CharStats
 from gui_scripts.user_input import UserInput
 from support_light_cones import apply_support_lcs
+from calculation_scripts.rotation import RotationList
+from calculation_scripts.calculations_utils import calculate_turn_energy
 
 
-def dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> list[Rotation]:
+def dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> RotationList:
     """Trailblazer (Preservation), or Fire MC for short,
     possesses the ability to use enhanced basic attacks
     which generate more energy (30 base, same as skill).
@@ -14,15 +15,15 @@ def dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> list[Rotat
     One enhanced attack is guaranteed after using ultimate."""
 
     e_basic_cost, fire_mc_stacks = _prep_init_stats(stats, user_input)
-    all_rotations: list[Rotation] = []
+    all_rotations = RotationList()
     stack = [(stats.init_energy, [], 0, fire_mc_stacks)]
 
     while stack:
         curr_energy, turns, skill_points_generated, fire_mc_stacks = stack.pop()
 
         if curr_energy >= stats.ult_cost:
-            rotation = Rotation(curr_energy, turns, skill_points_generated)
-            all_rotations.append(rotation)
+            all_rotations.add_rotation(curr_energy, turns,
+                                       skill_points_generated)
             continue
 
         fire_mc_stacks = _gain_stacks(user_input, fire_mc_stacks)

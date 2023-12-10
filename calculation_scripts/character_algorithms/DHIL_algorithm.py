@@ -1,14 +1,15 @@
 """This module contains a specific algorithm for Dan Heng Imbibitor Lunae (DHIL)."""
 
 from characters import CharStats
-from ..detailed_breakdown import print_detailed_breakdown
-from gui_scripts.user_input import UserInput
 from support_light_cones import apply_support_lcs
-from calculation_scripts.calculations_utils import (Rotation, calculate_turn_energy,
+from gui_scripts.user_input import UserInput
+from ..detailed_breakdown import print_detailed_breakdown
+from calculation_scripts.rotation import Rotation, RotationList
+from calculation_scripts.calculations_utils import (calculate_turn_energy,
                                                     print_char_info, print_rotation_info)
 
 
-def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput) -> list[Rotation]:
+def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput) -> RotationList:
     """Dan Heng Imbibitor Lunae, or DHIL for short,
     possesses the ability to use 3 levels of enhanced basic attacks
     which generate more energy (30, 35, 40 respectively).
@@ -17,15 +18,15 @@ def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput) -> list[Rotation
     these stacks can be used instead of regular Skill Points."""
 
     skill_points_generated = _prep_init_stats(stats, user_input)
-    all_rotations: list[Rotation] = []
+    all_rotations = RotationList()
     stack = [(stats.init_energy, [], skill_points_generated)]
 
     while stack:
         curr_energy, turns, skill_points_generated = stack.pop()
 
         if curr_energy >= stats.ult_cost:
-            rotation = Rotation(curr_energy, turns, skill_points_generated)
-            all_rotations.append(rotation)
+            all_rotations.add_rotation(curr_energy, turns,
+                                       skill_points_generated)
             continue
 
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)
@@ -63,15 +64,14 @@ def _prep_init_stats(stats: CharStats, user_input: UserInput) -> int:
 
 
 def print_results_dhil(stats: CharStats, user_input: UserInput,
-                       all_rotations: list[Rotation]) -> None:
+                       all_rotations: RotationList) -> None:
     """Prints DHIL's various rotations. This includes his best, most effective rotation,
     as well as rotations with various skill point breakpoints.
     Such breakpoints include -0.5, -1.25, -1.5, -2, and -2.33 skill points per turn (SP/T)."""
 
-    print_char_info(stats.energy_recharge, user_input)
+    print_char_info(stats, user_input)
 
     best_rotation = min(all_rotations, key=_get_best_rotation_sorting_key)
-    best_rotation.turn_sequence = _order_turns_dhil(best_rotation)
     print_rotation_info("Best rotation", best_rotation)
 
     print_dhil_rotation(all_rotations, sp_cost_per_turn=0)
@@ -87,13 +87,12 @@ def print_results_dhil(stats: CharStats, user_input: UserInput,
         print_detailed_breakdown(stats, user_input, best_rotation)
 
 
-def print_dhil_rotation(all_rotations: list[Rotation], sp_cost_per_turn: float) -> None:
+def print_dhil_rotation(all_rotations: RotationList, sp_cost_per_turn: float) -> None:
     """Prints the best DHIL's rotation with the specified Skill Point cost per turn, or less."""
 
     rotation = min((r for r in all_rotations
                     if r.sp_cost_per_turn >= sp_cost_per_turn),
                    key=lambda r: _get_best_general_sorting_key(r))
-    rotation.turn_sequence = _order_turns_dhil(rotation)
 
     if sp_cost_per_turn == 0:
         rotation_name = "Neutral rotation"
@@ -128,35 +127,3 @@ def _get_best_general_sorting_key(rotation: Rotation) -> tuple:
                    -rotation.turns.count("EB1"), -rotation.turns.count("BASIC"))
 
     return sorting_key
-
-
-def _order_turns_dhil(rotation: Rotation) -> str:
-    """Returns the list of turns in the following format:
-    "A x EB3 > B x EB2 > C x EB1 > D x BASIC" where A, B, C
-    and D are numbers of occurrences for level 3 Enhanced Basics,
-    level 2 EBs, level 1 EBs, and Basic attacks respectively.
-    These attacks are omitted if their occurrence equals 0."""
-
-    turns = []
-
-    if rotation.e_basic_3_count > 1:
-        turns.append(f"{rotation.e_basic_3_count} x EB3")
-    elif rotation.e_basic_3_count == 1:
-        turns.append("EB3")
-
-    if rotation.e_basic_2_count > 1:
-        turns.append(f"{rotation.e_basic_2_count} x EB2")
-    elif rotation.e_basic_2_count == 1:
-        turns.append("EB2")
-
-    if rotation.e_basic_count > 1:
-        turns.append(f"{rotation.e_basic_count} x EB1")
-    elif rotation.e_basic_count == 1:
-        turns.append("EB1")
-
-    if rotation.basic_count > 1:
-        turns.append(f"{rotation.basic_count} x BASIC")
-    elif rotation.basic_count == 1:
-        turns.append("BASIC")
-
-    return " > ".join(turns)

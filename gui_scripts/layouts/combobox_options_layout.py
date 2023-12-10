@@ -7,12 +7,19 @@ class ComboboxOptionsLayout(QGridLayout):
         super().__init__()
 
         self.hits_taken_cb = CounterInput("Hits Taken:       ", parent)
-        self.hits_taken_tooltip = Tooltip(text=("Your tooltip text here"))
+        self.hits_taken_tooltip = Tooltip(
+            text=(("It is assumed that you get hit for 10 energy. "
+                   "However, generated energy can range from 2 to 25 energy "
+                   "depending on the enemy that hits you "
+                   "or the number of hits the attack constitutes of.")))
 
         self.ally_hits_taken_cb = CounterInput("Ally Hits Taken:",
                                                parent)
         self.ally_hits_taken_cb.setEnabled(False)
-        self.ally_hits_taken_tooltip = Tooltip(text=("Your tooltip text here"))
+        self.ally_hits_taken_tooltip = Tooltip(
+            text=("Energy gained when ally gets hit. "
+                  "Note that for Lynx to benefit from this ally must have Lynx's "
+                  '"Survival Response" (continues healing effect) applied to them.'))
 
         self.kills_input = CounterInput(
             "Kills:                      ", parent)

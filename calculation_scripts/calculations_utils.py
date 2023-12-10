@@ -1,13 +1,13 @@
 from typing import Optional
 from termcolor import colored
 from characters import CharStats, HUOHUO_PERCENT_ENERGY_BONUSES
+from traces import TRACES
 from gui_scripts.user_input import UserInput
 from gui_scripts.counter import Counter
-from traces import TRACES
-from .rotation import Rotation
+from .rotation import Rotation, RotationList
 
 
-def determine_initial_energy(stats: CharStats, user_input: UserInput) -> float:
+def determine_initial_energy(stats: CharStats, user_input: UserInput) -> None:
     """Determines the amount of energy character has before calculating their rotation.
     This can include the energy from activating their ultimate."""
 
@@ -46,7 +46,7 @@ def print_er_threshold(rotation: Rotation, stat_value: float,
         print(f"ER needed for the next breakpoint: {er_threshold}%")
 
 
-def find_basic_only_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
+def find_basic_only_rotation(rotations: RotationList) -> Optional[Rotation]:
     """Finds the shortest rotation that contains only basic attacks.
     Returns such a rotation if found, otherwise returns None."""
 
@@ -63,7 +63,7 @@ def find_basic_only_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
         return None
 
 
-def find_skill_only_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
+def find_skill_only_rotation(rotations: RotationList) -> Optional[Rotation]:
     """Finds the shortest rotation that contains only skills.
     Returns such a rotation if found, otherwise returns None."""
 
@@ -79,7 +79,7 @@ def find_skill_only_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
         return None
 
 
-def find_one_skill_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
+def find_one_skill_rotation(rotations: RotationList) -> Optional[Rotation]:
     """Finds the shortest rotation that contains only one skill.
     Returns such a rotation if found, otherwise returns None."""
 
@@ -95,7 +95,7 @@ def find_one_skill_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
         return None
 
 
-def find_neutral_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
+def find_neutral_rotation(rotations: RotationList) -> Optional[Rotation]:
     """Finds the shortest neutral rotation,
     i.e., a rotation that uses an average of 0 skill points per turn.
     Returns such a rotation if found, otherwise returns None."""
@@ -112,7 +112,7 @@ def find_neutral_rotation(rotations: list[Rotation]) -> Optional[Rotation]:
         return None
 
 
-def find_best_rotation(rotations: list[Rotation]) -> Rotation:
+def find_best_rotation(rotations: RotationList) -> Rotation:
     """Finds the best rotation, defined as the rotation with fewest turns,
     as well as the lowest skill point per turn cost."""
 
@@ -122,18 +122,25 @@ def find_best_rotation(rotations: list[Rotation]) -> Rotation:
     return best_rot
 
 
-def print_char_info(energy_recharge: float, user_input: UserInput) -> None:
+def print_char_info(stats: CharStats, user_input: UserInput) -> None:
     """Collects and prints character to more easily keep track of,
     and distinguish between, various calculations of the same character.
 
     This includes:
         - Character's energy recharge
-        - selected eidolon level
+        - selected character's eidolon level
         - equipped Light Cone and support Light Cone
-        - selected trace"""
+        - selected character's trace
+        - selected character's technique"""
 
-    energy_recharge = round(energy_recharge * 100, 3)
-    char_info = f"E{user_input.eidolon_level} {user_input.char_name} with {energy_recharge}% ER"
+    char_info = ""
+    energy_recharge = round(stats.energy_recharge * 100, 3)
+
+    if user_input.char_name == "Argenti":
+        char_info = f"{stats.ult_cost} energy mode: "
+
+    char_info += (f"E{user_input.eidolon_level} {user_input.char_name} "
+                  f"with {energy_recharge}% ER")
 
     if user_input.light_cone:
         char_info += (f" and S{user_input.light_cone.superimposition + 1} "
@@ -233,19 +240,3 @@ def determine_ally_hit_energy(stats: CharStats, user_input: UserInput) -> None:
     }
 
     stats.ally_get_hit = ally_hit_bonuses.get((user_input.char_name, True), 0)
-
-
-def remove_duplicate_rotations(all_rotations: list[Rotation]) -> list[Rotation]:
-    """Removes duplicates in order to speed up filters for various rotation types.
-    Then returns the unique rotations."""
-
-    unique_rotations = []
-    seen_turn_combinations = set()
-
-    for rotation in all_rotations:
-        if rotation.turn_sequence not in seen_turn_combinations:
-            seen_turn_combinations.add(rotation.turn_sequence)
-            rotation.process_rotation_data()
-            unique_rotations.append(rotation)
-
-    return unique_rotations

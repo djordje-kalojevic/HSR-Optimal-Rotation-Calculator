@@ -74,7 +74,6 @@ class TooltipCheckBox(QWidget):
         form_layout.addRow(self.checkbox, self.tooltip)
         form_layout.setContentsMargins(form_layout.contentsMargins().left(), 0,
                                        form_layout.contentsMargins().right(), 0)
-
         self.setLayout(form_layout)
 
     def reset_selection(self):
@@ -126,6 +125,8 @@ class CounterInput(QWidget):
         that is whether or not this input is applied very turn."""
         if self.check_box:
             return self.check_box.isChecked()
+
+        return False
 
     def reset_selection(self):
         """Resets widget to its default value."""

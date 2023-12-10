@@ -22,7 +22,11 @@ Calculate a one-skill rotation to see if it aligns with buff/debuff durations, s
 This mode prioritizes rotations with minimal skill point cost.
 
 - **Specialized algorithms for certain characters:**\
+<<<<<<< HEAD
+These characters posses unique attacks or additional ways of generating energy. These currently include: Argenti, Arlan, Blade, Dan Heng Imbibitor Lunae, Fu Xuan, Jingliu, Luka, Topaz, and Trailblazer (Preservation), i.e., Fire MC.
+=======
 These characters posses unique attacks or additional ways of generating energy. These currently include: Arlan, Blade, Dan Heng Imbibitor Lunae, Fu Xuan, Jingliu, Luka, Topaz, and Trailblazer (Preservation), i.e., Fire MC.
+>>>>>>> 7d1141ad97ec2c11fbbfa75529caff614d2c27b8
 
 - **Detailed energy breakdown:**\
 This option will list all the energy sources and the amount of energy they have generated. 

@@ -6,25 +6,25 @@ The HSR Optimal Rotation Calculator is a powerful tool designed to optimize char
 
 The HSR Optimal Rotation Calculator offers the following features:
 
-\*\*Neutral Rotations:\*\*  
+**Neutral Rotations:**  
 Calculate the neutral rotation, i.e., a rotation that costs an average of 0 skill points per turn, where applicable.
 
-\*\*Basic Attack Rotation and Energy Recharge (ER) breakpoints:\*\*  
+**Basic Attack Rotation and Energy Recharge (ER) breakpoints:**  
 Calculate the optimal rotation composed only of basic attacks, along with the required ER to reach the next breakpoint.
 
-\*\*Skill Rotation and ER breakpoints:\*\*  
+**Skill Rotation and ER breakpoints:**  
 Calculate the optimal rotation composed only of skills, along with the required ER to reach the next breakpoint.
 
-\*\*One-Skill Rotation for Buffers/Debuffers:\*\*  
+**One-Skill Rotation for Buffers/Debuffers:**  
 Calculate a one-skill rotation to see if it aligns with buff/debuff durations, such as Tingyun, Silver Wolf, etc.
 
-\*\*Shortest, most efficient Rotation:\*\*  
+**Shortest, most efficient Rotation:**  
 This mode prioritizes rotations with minimal skill point cost.
 
-\*\*Specialized algorithms for certain characters:\*\*  
+**Specialized algorithms for certain characters:**  
 These characters posses unique attacks or additional ways of generating energy. These currently include: Argenti, Arlan, Blade, Dan Heng Imbibitor Lunae, Fu Xuan, Jingliu, Luka, Topaz, and Trailblazer (Preservation), i.e., Fire MC.
 
-\*\*Detailed energy breakdown:\*\*  
+**Detailed energy breakdown:**  
 This option will list all the energy sources and the amount of energy they have generated.
 
 ## Customization Options

@@ -1,6 +1,7 @@
 """Module used for selecting and applying the correct character algorithm."""
 
-from characters import CharStats
+from typing import Callable
+from character_utils.characters import CharStats
 from gui_scripts.user_input import UserInput
 from calculation_scripts.rotation import RotationList
 from .default_algorithm import dfs_algorithm_default, print_results_default
@@ -33,23 +34,29 @@ def apply_correct_algorithm(stats: CharStats, user_input: UserInput) -> Rotation
         "Trailblazer (Preservation)": dfs_algorithm_fire_mc
     }
 
+    user_input.cache("before-calculation")
     algorithm = specific_algorithms.get(user_input.char_name,
                                         dfs_algorithm_default)
+    user_input.retrieve_cache("before-calculation")
 
-    return algorithm(stats, user_input)
+    unique_rotations = algorithm(stats, user_input)
+    unique_rotations.process_rotation_data(user_input.char_name)
+
+    return unique_rotations
 
 
-def print_results(stats: CharStats, user_input: UserInput, all_rotations: RotationList) -> None:
+def print_results(stats: CharStats, user_input: UserInput, all_rotations: RotationList,
+                  algorithm: Callable[[CharStats, UserInput], RotationList]) -> None:
     """Prints calculation results for the given character. 
     If the character has a custom print function, that function will be used. 
     Otherwise, a default print function will be applied instead."""
 
     match user_input.char_name:
         case "Argenti":
-            print_results_argenti(stats, user_input, all_rotations)
+            print_results_argenti(stats, user_input, all_rotations, algorithm)
         case "Blade":
-            print_results_blade(stats, user_input, all_rotations)
+            print_results_blade(stats, user_input, all_rotations, algorithm)
         case "Dan Heng IL":
             print_results_dhil(stats, user_input, all_rotations)
         case _:
-            print_results_default(stats, user_input, all_rotations)
+            print_results_default(stats, user_input, all_rotations, algorithm)

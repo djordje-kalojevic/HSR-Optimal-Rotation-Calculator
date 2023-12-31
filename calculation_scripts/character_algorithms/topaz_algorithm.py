@@ -1,8 +1,8 @@
 """This module contains a specific algorithm for Topaz."""
 
-from characters import CharStats
+from character_utils.characters import CharStats
 from gui_scripts.user_input import UserInput
-from support_light_cones import apply_support_lcs
+from equipment_utils.support_light_cones import apply_support_lcs
 from calculation_scripts.rotation import RotationList
 from calculation_scripts.calculations_utils import calculate_turn_energy
 
@@ -25,15 +25,17 @@ def dfs_algorithm_topaz(stats: CharStats, user_input: UserInput) -> RotationList
             numby_triggers -= 1
 
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)
-        turn_energy = calculate_turn_energy(stats, user_input)
+        curr_energy += calculate_turn_energy(user_input)
 
         # Topaz uses Basic Attack
-        stack.append((curr_energy + stats.basic + turn_energy,
-                     turns + ["BASIC"], skill_points_generated + 1))
+        stack.append((curr_energy + stats.basic,
+                     turns + ["BASIC"],
+                     skill_points_generated + 1))
 
         # Topaz uses Skill
-        stack.append((curr_energy + stats.skill + turn_energy,
-                      turns + ["SKILL"], skill_points_generated - 1))
+        stack.append((curr_energy + stats.skill,
+                      turns + ["SKILL"],
+                      skill_points_generated - 1))
 
     return all_rotations
 

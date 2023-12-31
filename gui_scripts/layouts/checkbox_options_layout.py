@@ -32,7 +32,15 @@ class CheckboxOptionsLayout(QGridLayout):
             tooltip_text=("Currently limited, albeit accurate, energy breakdown "
                           "which lists energy sources and the amount of energy they generate."))
 
+        self.show_er_breakpoints = TooltipCheckBox(
+            parent, label="[BETA] Show Energy Recharge breakpoints?",
+            tooltip_text=("Shows precise ER breakpoints, i.e., "
+                          "the amount of additional ER needed to shorten a rotation by one turn.\n"
+                          "Tested but might cause unintended problems. If so, please report them."),
+            checked=True)
+
         self.addWidget(self.assume_ult, 0, 0)
         self.addWidget(self.show_detailed_breakdown, 1, 0)
         self.addWidget(self.assume_tingyun_ult, 0, 1)
         self.addWidget(self.assume_tingyun_e6, 1, 1)
+        self.addWidget(self.show_er_breakpoints, 2, 0)

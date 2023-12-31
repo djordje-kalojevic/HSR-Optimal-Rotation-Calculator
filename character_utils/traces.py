@@ -5,7 +5,7 @@ storing them, as well as applying their bonuses."""
 
 from dataclasses import dataclass
 from csv import DictReader
-from characters import CharStats
+from .characters import CharStats
 
 
 TRACES_CSV = "data/traces.csv"

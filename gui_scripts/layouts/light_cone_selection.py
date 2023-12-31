@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from PyQt6.QtWidgets import QGridLayout
 from ..widgets import Combobox, SearchBox
-from light_cones import LIGHT_CONES
+from equipment_utils.light_cones import LIGHT_CONES
 
 
 @dataclass

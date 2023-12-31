@@ -2,9 +2,9 @@
 Light Cones that can be equipped on another character and still provide their bonuses."""
 
 
-from characters import CharStats
 from gui_scripts.user_input import UserInput
-from light_cones import LightCone
+from character_utils.characters import CharStats
+from .light_cone import LightCone
 
 
 def apply_support_lcs(stats: CharStats,

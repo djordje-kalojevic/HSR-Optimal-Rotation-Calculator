@@ -9,8 +9,6 @@ from dataclasses import dataclass
 from typing import Optional
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QDialog, QVBoxLayout, QLabel
-
-from traces import TRACES
 from .widgets import Combobox, TooltipCheckBox, CounterInput
 from .layouts.button_layout import ButtonLayout
 from .layouts.character_selector import CharacterSelectorLayout
@@ -22,10 +20,12 @@ from .layouts.support_light_cone_selection import SupportLightConeSelectionLayou
 from .gui_utils import get_int_from_selector
 from .user_input import UserInput
 from .counter import Counter
-from characters import CharStats, CHARACTERS
-from talents import TALENTS
-from light_cones import LIGHT_CONES
-from relics import Relic, ALL_RELICS
+from character_utils.characters import CharStats, CHARACTERS
+from character_utils.traces import TRACES
+from character_utils.talents import TALENTS
+from equipment_utils.light_cones import LIGHT_CONES
+from equipment_utils.relic import Relic
+from equipment_utils.relics import ALL_RELICS
 from calculation_scripts.calculations import run_calculations
 
 
@@ -144,8 +144,6 @@ class MainWindowDemo(QDialog):
         self._collect_combat_input()
         self._collect_other_input()
 
-        self.user_input.cache("before-calculation")
-
     def _collect_char_input(self) -> None:
         """Collects character input, this includes:
         their name, their Eidolon level, talent level, trace possessed,
@@ -169,7 +167,7 @@ class MainWindowDemo(QDialog):
             return
 
         self.user_input.talent.calculate_energy(self.user_input.talent.level)
-        self.user_input.num_talent_triggers = self._get_talent_num_triggers()
+        self.user_input.talent_triggers = self._get_talent_num_triggers()
 
     def _collect_gear_input(self) -> None:
         """Collects gear input, this includes:
@@ -183,7 +181,7 @@ class MainWindowDemo(QDialog):
             self.user_input.support_light_cone.trigger = self._get_support_lc_triggers()
 
         self.user_input.relic = self._get_relic()
-        self.user_input.num_relic_trigger = self._get_relic_trigger()
+        self.user_input.relic_trigger = self._get_relic_trigger()
         self.user_input.ornament = self.relic_layout.ornament_selector.currentText()
         self.user_input.rope = self.relic_layout.rope_selector.currentText()
 
@@ -191,11 +189,11 @@ class MainWindowDemo(QDialog):
         """Collects combat input, this includes the number of the following:
         hits taken, kills, ultimate kills, and follow-up attacks."""
 
-        self.user_input.num_hits_taken = self._get_hits_taken()
-        self.user_input.ally_num_hits_taken = self._get_ally_hits_taken()
-        self.user_input.num_kills = self._get_kills()
+        self.user_input.hits_taken = self._get_hits_taken()
+        self.user_input.ally_hits_taken = self._get_ally_hits_taken()
+        self.user_input.kills = self._get_kills()
         self.user_input.num_ult_kills = self._get_ult_kills()
-        self.user_input.num_follow_ups = self._get_num_follow_ups()
+        self.user_input.follow_ups = self._get_num_follow_ups()
 
     def _collect_other_input(self) -> None:
         options = self.options_layout.check_boxes
@@ -204,6 +202,7 @@ class MainWindowDemo(QDialog):
         user_input.assume_tingyun_ult = options.assume_tingyun_ult.checkbox.isChecked()
         user_input.assume_tingyun_e6 = options.assume_tingyun_e6.checkbox.isChecked()
         user_input.detailed_breakdown = options.show_detailed_breakdown.checkbox.isChecked()
+        user_input.show_er_breakpoints = options.show_er_breakpoints.checkbox.isChecked()
         user_input.matching_enemy_weakness = (
             self.enemy_info_layout.enemy_weakness.checkbox.isChecked())
         user_input.enemy_count = self._get_enemy_count()
@@ -237,7 +236,6 @@ class MainWindowDemo(QDialog):
 
     def _get_talent_level(self) -> int:
         """Returns the selected talent level."""
-        # return get_int_from_selector(self.char_layout.talent_selector)
         return self.char_layout.talent_selector.get_num_input()
 
     def _get_talent_num_triggers(self) -> Counter:

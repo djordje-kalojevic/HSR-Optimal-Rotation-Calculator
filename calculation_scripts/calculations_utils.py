@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Callable, Optional
 from termcolor import colored
-from characters import CharStats, HUOHUO_PERCENT_ENERGY_BONUSES
-from traces import TRACES
+from character_utils.characters import CharStats
+from character_utils.traces import TRACES
 from gui_scripts.user_input import UserInput
 from gui_scripts.counter import Counter
 from .rotation import Rotation, RotationList
@@ -9,41 +9,31 @@ from .rotation import Rotation, RotationList
 
 def determine_initial_energy(stats: CharStats, user_input: UserInput) -> None:
     """Determines the amount of energy character has before calculating their rotation.
-    This can include the energy from activating their ultimate."""
+    This can include the energy from activating their Ultimates."""
+
+    if user_input.char_name == "Argenti":
+        if user_input.assume_ult:
+            enemy_hit_bonus = 3
+            stats.init_energy += enemy_hit_bonus * user_input.enemy_count
+        if user_input.technique:
+            stats.init_energy += 15
+
+    elif user_input.char_name == "Dr. Ratio" and user_input.assume_ult:
+        stats.init_energy += 2 * stats.follow_up + stats.follow_up
+        if user_input.eidolon_level == 6:
+            stats.init_energy += stats.follow_up
+
+    elif user_input.char_name == "Himeko":
+        stats.ult_kill += 5
+
+    elif user_input.char_name == "Ruan Mei" and user_input.technique:
+        stats.init_energy += stats.skill
 
     if user_input.assume_ult:
         stats.init_energy += stats.ult_act
 
     if user_input.num_ult_kills > 0:
         stats.init_energy += user_input.num_ult_kills * stats.ult_kill
-
-    if user_input.huohuo_ult_level > 0:
-        bonus = HUOHUO_PERCENT_ENERGY_BONUSES[user_input.huohuo_ult_level - 1]
-        stats.init_energy += bonus / 100 * stats.ult_cost
-
-
-def get_er_breakpoint(rotation: Rotation, attack_value: float,
-                      ult_cost: float, init_energy: float) -> float:
-    """Calculates and returns the energy recharge breakpoint, i.e.,
-    how much more ER is required to shorten such a rotation by one turn.
-    Return 0% if the rotation in question is 1 turn long,
-    as there could not possibly exist a shorter rotation."""
-
-    if rotation.num_turns - 1 == 0:
-        return 0
-
-    needed_attack_value = (ult_cost - init_energy) / (rotation.num_turns - 1)
-    return round((needed_attack_value / attack_value - 1) * 100, 3)
-
-
-def print_er_threshold(rotation: Rotation, stat_value: float,
-                       ult_cost: float, init_energy: float) -> None:
-    """Print the energy recharge needed for the next breakpoint."""
-
-    er_threshold = get_er_breakpoint(rotation, stat_value,
-                                     ult_cost, init_energy)
-    if er_threshold > 0:
-        print(f"ER needed for the next breakpoint: {er_threshold}%")
 
 
 def find_basic_only_rotation(rotations: RotationList) -> Optional[Rotation]:
@@ -128,9 +118,9 @@ def print_char_info(stats: CharStats, user_input: UserInput) -> None:
 
     This includes:
         - Character's energy recharge
-        - selected character's eidolon level
+        - selected character's Eidolon level
         - equipped Light Cone and support Light Cone
-        - selected character's trace
+        - selected character's Trace
         - selected character's technique"""
 
     char_info = ""
@@ -151,7 +141,8 @@ def print_char_info(stats: CharStats, user_input: UserInput) -> None:
                       f"{user_input.support_light_cone.name}")
 
     if user_input.trace in TRACES.keys():
-        char_info += f" and {user_input.trace}"
+        trace_unlock_level = user_input.trace.split("(")[1][:-1]
+        char_info += f" and {trace_unlock_level}"
 
     if user_input.technique:
         char_info += f" + technique"
@@ -177,8 +168,8 @@ def print_rotation_info(rotation_name: str, rotation: Optional[Rotation], displa
               f"{rotation.turn_sequence}")
 
 
-def calculate_turn_energy(stats: CharStats, user_input: UserInput) -> float:
-    """Calculates the energy generated during each turn based on user inputs.
+def calculate_turn_energy(user_input: UserInput) -> float:
+    """Calculates and returns the energy generated during each turn based on user inputs.
     This includes follow-up attacks, kills, hits taken, ally hits taken,
     talents, and relic triggers."""
 
@@ -189,41 +180,18 @@ def calculate_turn_energy(stats: CharStats, user_input: UserInput) -> float:
 
     turn_energy = 0
 
-    def process_action(trigger_counter: Counter, energy_bonus: float) -> Counter:
+    def process_action(counter: Counter) -> None:
         nonlocal turn_energy
-        if trigger_counter.num_triggers == 0 or energy_bonus == 0:
-            return trigger_counter
-        if trigger_counter.repeat_every_turn:
-            turn_energy += energy_bonus * trigger_counter.num_triggers
-        elif trigger_counter.num_triggers > 0:
-            turn_energy += energy_bonus
-            trigger_counter.num_triggers -= 1
-        return trigger_counter
+        if not counter or counter.num_triggers == 0 or counter.energy == 0:
+            return
+        if counter.repeat_every_turn:
+            turn_energy += counter.energy * counter.num_triggers
+        elif counter.num_triggers > 0:
+            turn_energy += counter.energy
+            counter.num_triggers -= 1
 
-    # Process follow-up attacks
-    user_input.num_follow_ups = process_action(user_input.num_follow_ups,
-                                               stats.follow_up)
-
-    # Process kills
-    user_input.num_kills = process_action(user_input.num_kills, stats.kill)
-
-    # Process getting hit
-    user_input.num_hits_taken = process_action(user_input.num_hits_taken,
-                                               stats.get_hit)
-    # Process ally getting hit
-    user_input.ally_num_hits_taken = process_action(user_input.ally_num_hits_taken,
-                                                    stats.ally_get_hit)
-
-    # Process relic bonuses
-    if user_input.relic:
-        relic_energy = user_input.relic.recharge_value
-        user_input.num_relic_trigger = process_action(user_input.num_relic_trigger,
-                                                      relic_energy)
-
-    # Process talent bonuses
-    if user_input.talent:
-        user_input.num_talent_triggers = process_action(user_input.num_talent_triggers,
-                                                        user_input.talent.energy)
+    for counter in user_input.counters.values():
+        process_action(counter)
 
     return turn_energy
 
@@ -240,3 +208,104 @@ def determine_ally_hit_energy(stats: CharStats, user_input: UserInput) -> None:
     }
 
     stats.ally_get_hit = ally_hit_bonuses.get((user_input.char_name, True), 0)
+
+
+def print_er_breakpoint(function: Callable[[RotationList], Rotation],
+                        algorithm: Callable[[CharStats, UserInput], RotationList],
+                        all_rotations: RotationList,
+                        old_rotation: Rotation,
+                        stats: CharStats, user_input: UserInput,
+                        old_er: float, upper_bound=2) -> None:
+    """Uses a Binary Search Algorithm to calculate and print the Energy Recharge breakpoint,
+    i.e., the amount of ER required to shorten such a rotation by one turn.
+    If total ER needed is higher than 200%, Binary Search will not be performed,
+    as there is no way to reach this much ER, as of now."""
+
+    if not user_input.show_er_breakpoints or not old_rotation or old_rotation.num_turns == 1:
+        return
+
+    lower_bound = old_er
+    precision = 0.00001
+
+    stats.apply_energy_recharge(upper_bound)
+    user_input.check_for_active_counters()
+
+    all_rotations = algorithm(stats, user_input)
+    new_rotation = function(all_rotations)
+
+    if new_rotation and old_rotation.turn_sequence == new_rotation.turn_sequence:
+        max_er = round(upper_bound * 100, 3)
+        print(f"Total ER needed for the next breakpoint: >{max_er}%")
+        stats.retrieve_cache("before-er-application", delete_cache=False)
+        stats.apply_energy_recharge(old_er)
+        return
+
+    while abs(upper_bound-lower_bound) >= precision:
+        mid_point = (upper_bound + lower_bound) / 2
+        new_er = mid_point
+
+        user_input.retrieve_cache("before-calculation")
+        user_input.check_for_active_counters()
+        stats.retrieve_cache("before-er-application", delete_cache=False)
+        stats.apply_energy_recharge(new_er)
+
+        all_rotations = algorithm(stats, user_input)
+        new_rotation = function(all_rotations)
+
+        if new_rotation and old_rotation.turn_sequence == new_rotation.turn_sequence:
+            lower_bound = mid_point
+
+        else:
+            upper_bound = mid_point
+
+    stats.retrieve_cache("before-er-application", delete_cache=False)
+    stats.apply_energy_recharge(old_er)
+
+    er_diff = round((new_er - old_er) * 100, 3)
+    print(f"ER needed for the next breakpoint: {er_diff}%")
+
+
+def determine_counter_energy_values(stats: CharStats, user_input: UserInput) -> None:
+    """Determines and saves energy gained through various actions."""
+
+    if user_input.talent:
+        user_input.talent_triggers.energy = user_input.talent.energy
+    if user_input.relic:
+        user_input.relic_trigger.energy = user_input.relic.recharge_value
+
+    user_input.hits_taken.energy = stats.get_hit
+    user_input.ally_hits_taken.energy = stats.ally_get_hit
+    user_input.follow_ups.energy = stats.follow_up
+    user_input.kills.energy = stats.kill
+
+
+def derive_special_action_values(stats: CharStats, user_input: UserInput) -> None:
+    """Determines energy of Special, character-specific attacks,
+    such as various Enhanced Basic Attacks, and Enhanced Skills."""
+
+    match user_input.char_name:
+        case "Argenti":
+            enemy_hit_bonus = 3
+            stats.basic += enemy_hit_bonus
+            stats.skill += enemy_hit_bonus * user_input.enemy_count
+
+        case "Blade":
+            stats.e_basic = stats.basic + 10
+
+        case "Dan Heng IL":
+            stats.e_basic = stats.basic + 10
+            stats.e_basic_2 = stats.basic + 15
+            stats.e_basic_3 = stats.basic + 20
+
+        case "Fu Xuan":
+            stats.e_skill = stats.skill + 20
+
+        case "Jingliu":
+            stats.e_skill = stats.skill
+            stats.skill -= 10
+
+        case "Luka":
+            stats.e_basic = stats.basic
+
+        case "Trailblazer (Preservation)":
+            stats.e_basic = stats.basic + 10

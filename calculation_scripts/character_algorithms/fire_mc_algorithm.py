@@ -1,8 +1,8 @@
 """This module contains a specific algorithm for Trailblazer (Preservation), i.e., Fire MC."""
 
-from characters import CharStats
+from character_utils.characters import CharStats
 from gui_scripts.user_input import UserInput
-from support_light_cones import apply_support_lcs
+from equipment_utils.support_light_cones import apply_support_lcs
 from calculation_scripts.rotation import RotationList
 from calculation_scripts.calculations_utils import calculate_turn_energy
 
@@ -14,7 +14,7 @@ def dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> RotationLi
     They cost 4 stacks, which are gained by attacking, using skills, or being attacks.
     One enhanced attack is guaranteed after using ultimate."""
 
-    e_basic_cost, fire_mc_stacks = _prep_init_stats(stats, user_input)
+    e_basic_cost, fire_mc_stacks = _prep_init_stats(user_input)
     all_rotations = RotationList()
     stack = [(stats.init_energy, [], 0, fire_mc_stacks)]
 
@@ -28,21 +28,21 @@ def dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> RotationLi
 
         fire_mc_stacks = _gain_stacks(user_input, fire_mc_stacks)
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)
-        turn_energy = calculate_turn_energy(stats, user_input)
+        curr_energy += calculate_turn_energy(user_input)
 
         # Fire MC uses Enhanced Basic
         if fire_mc_stacks >= e_basic_cost:
-            stack.append((curr_energy + stats.e_basic + turn_energy,
+            stack.append((curr_energy + stats.e_basic,
                           turns + ["E. BASIC"],
                           skill_points_generated + 1,
                           fire_mc_stacks - e_basic_cost))
 
-        stack.append((curr_energy + stats.basic + turn_energy,
+        stack.append((curr_energy + stats.basic,
                       turns + ["BASIC"],
                       skill_points_generated + 1,
                       fire_mc_stacks + 1))
 
-        stack.append((curr_energy + stats.skill + turn_energy,
+        stack.append((curr_energy + stats.skill,
                       turns + ["SKILL"],
                       skill_points_generated - 1,
                       fire_mc_stacks + 1))
@@ -50,9 +50,7 @@ def dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> RotationLi
     return all_rotations
 
 
-def _prep_init_stats(stats: CharStats, user_input: UserInput) -> tuple[int, int]:
-    stats.e_basic = stats.basic + 10 * stats.energy_recharge
-
+def _prep_init_stats(user_input: UserInput) -> tuple[int, int]:
     e_basic_cost = 4
     fire_mc_stacks = e_basic_cost if user_input.assume_ult else 0
 
@@ -62,10 +60,10 @@ def _prep_init_stats(stats: CharStats, user_input: UserInput) -> tuple[int, int]
 def _gain_stacks(user_input: UserInput, stacks: int) -> int:
     """Gains stacks with every hit taken."""
 
-    if user_input.num_hits_taken.repeat_every_turn:
-        stacks += user_input.num_hits_taken.num_triggers
+    if user_input.hits_taken.repeat_every_turn:
+        stacks += user_input.hits_taken.num_triggers
 
-    elif user_input.num_hits_taken.num_triggers > 0:
+    elif user_input.hits_taken.num_triggers > 0:
         stacks += 1
 
     return stacks

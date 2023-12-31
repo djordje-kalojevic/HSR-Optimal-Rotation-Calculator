@@ -1,11 +1,12 @@
 char_name,trace_name,trace_type,value
-Hook,Playing With Fire (A6 trace),ult_act,5
-Jing Yuan,Savant Providence (A4 trace),battle_start,15
-Luka,Cycle Braking (A4 trace),,3
-Sampo,Defensive Position (A4 trace),ult_act,10
-Serval,String Vibration (A4 trace),battle_start,15
-Tingyun,Jubilant Passage (A6 trace),turn,5
-Trailblazer (Destruction),Ready for Battle (A2 trace),battle_start,15
-Trailblazer (Preservation),Action Beats Overthinking (A6 trace),turn,5
-Welt,Judgment (A4 trace),ult_act,10
-Yukong,Majestas (A6 trace),yukong,2
+Hook,Playing With Fire (A6 Trace),ult_act,5
+Jing Yuan,Savant Providence (A4 Trace),battle_start,15
+Luka,Cycle Braking (A4 Trace),,3
+Ruan Mei,"Days Wane, Thoughts Wax (A4 Trace)",turn,5
+Sampo,Defensive Position (A4 Trace),ult_act,10
+Serval,String Vibration (A4 Trace),battle_start,15
+Tingyun,Jubilant Passage (A6 Trace),turn,5
+Trailblazer (Destruction),Ready for Battle (A2 Trace),battle_start,15
+Trailblazer (Preservation),Action Beats Overthinking (A6 Trace),turn,5
+Welt,Judgment (A4 Trace),ult_act,10
+Yukong,Majestas (A6 Trace),yukong,2

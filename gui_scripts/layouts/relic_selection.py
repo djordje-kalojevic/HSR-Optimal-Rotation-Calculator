@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QGridLayout
 from ..widgets import Combobox, CounterInput
-from relics import ALL_RELICS
+from equipment_utils.relics import ALL_RELICS
 
 
 @dataclass

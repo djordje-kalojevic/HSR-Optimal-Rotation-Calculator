@@ -1,8 +1,8 @@
 """This module contains a specific algorithm for Luka."""
 
-from characters import CharStats
+from character_utils.characters import CharStats
 from gui_scripts.user_input import UserInput
-from support_light_cones import apply_support_lcs
+from equipment_utils.support_light_cones import apply_support_lcs
 from calculation_scripts.rotation import RotationList
 from calculation_scripts.calculations_utils import calculate_turn_energy
 
@@ -28,25 +28,25 @@ def dfs_algorithm_luka(stats: CharStats, user_input: UserInput) -> RotationList:
             continue
 
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)
-        turn_energy = calculate_turn_energy(stats, user_input)
+        curr_energy += calculate_turn_energy(user_input)
 
         # Luka uses Enhanced Basic
         if luka_stacks >= e_basic_cost:
-            stack.append((curr_energy + stats.e_basic + turn_energy,
+            stack.append((curr_energy + stats.e_basic,
                           turns + ["E. BASIC"],
                           skill_points_generated + 1,
                           luka_stacks - e_basic_cost))
 
         # Luka uses Basic, generating one stack and 3 energy
-        stack.append((curr_energy + stats.basic + turn_energy + stack_energy_bonus,
+        stack.append((curr_energy + stats.basic + stack_energy_bonus,
                      turns + ["BASIC"],
                      skill_points_generated + 1,
                      luka_stacks + 1))
 
         # Luka uses Skill, generating one stack and 3 energy,
         # and additionally one stack and 3 energy if enemy has physical weakness
-        energy = (curr_energy + stats.skill + turn_energy
-                  + stack_energy_bonus * (1 + 1 * enemy_phys_weak))
+        energy = (curr_energy + stats.skill +
+                  stack_energy_bonus * (1 + 1 * enemy_phys_weak))
 
         stack.append((energy,
                       turns + ["SKILL"],
@@ -57,7 +57,6 @@ def dfs_algorithm_luka(stats: CharStats, user_input: UserInput) -> RotationList:
 
 
 def _prep_init_stats(stats: CharStats, user_input: UserInput) -> tuple[float, int, bool]:
-    stats.e_basic = stats.basic
     stack_energy_bonus = 0
 
     if user_input.trace:

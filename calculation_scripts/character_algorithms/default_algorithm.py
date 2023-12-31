@@ -1,15 +1,18 @@
 """This module contains a default Depth-First Search algorithm
 for characters that do not have a specialized one."""
 
-from characters import CharStats
+from typing import Callable
+from character_utils.characters import CharStats
 from ..detailed_breakdown import print_detailed_breakdown
 from gui_scripts.user_input import UserInput
-from support_light_cones import apply_support_lcs
+from equipment_utils.support_light_cones import apply_support_lcs
 from calculation_scripts.rotation import RotationList
 from calculation_scripts.calculations_utils import (
-    calculate_turn_energy, find_basic_only_rotation, find_best_rotation,
-    find_neutral_rotation, find_one_skill_rotation, find_skill_only_rotation,
-    print_char_info, print_er_threshold, print_rotation_info)
+    calculate_turn_energy, find_basic_only_rotation,
+    find_best_rotation,
+    find_neutral_rotation, find_one_skill_rotation,
+    find_skill_only_rotation, print_char_info,
+    print_rotation_info, print_er_breakpoint)
 
 
 def dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> RotationList:
@@ -30,20 +33,22 @@ def dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> RotationLi
             continue
 
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)
-        turn_energy = calculate_turn_energy(stats, user_input)
+        curr_energy += calculate_turn_energy(user_input)
 
         # Character uses Basic Attack
-        stack.append((curr_energy + stats.basic + turn_energy,
-                     turns + ["BASIC"], skill_points_generated + 1))
+        stack.append((curr_energy + stats.basic,
+                     turns + ["BASIC"],
+                     skill_points_generated + 1))
 
         # Character uses Skill
-        stack.append((curr_energy + stats.skill + turn_energy,
-                     turns + ["SKILL"], skill_points_generated - 1))
+        stack.append((curr_energy + stats.skill,
+                     turns + ["SKILL"],
+                     skill_points_generated - 1))
 
     return all_rotations
 
 
-def print_results_default(stats: CharStats, user_input: UserInput, all_rotations: RotationList):
+def print_results_default(stats: CharStats, user_input: UserInput, all_rotations: RotationList, algorithm: Callable):
     """Prints various rotation results, for example, the following:
         - character info: their name, energy recharge,
         Light Cone that's equipped and its superimposition
@@ -61,24 +66,35 @@ def print_results_default(stats: CharStats, user_input: UserInput, all_rotations
 
     best_rotation = find_best_rotation(all_rotations)
     print_rotation_info("Most optimal rotation", best_rotation)
+    print_er_breakpoint(find_best_rotation, algorithm, all_rotations,
+                        best_rotation, stats, user_input,
+                        stats.energy_recharge)
 
     neutral_rotation = find_neutral_rotation(all_rotations)
     print_rotation_info("Neutral rotation", neutral_rotation)
+    print_er_breakpoint(find_neutral_rotation, algorithm, all_rotations,
+                        neutral_rotation, stats, user_input,
+                        stats.energy_recharge)
 
     basic_only_rot = find_basic_only_rotation(all_rotations)
     if basic_only_rot:
         print_rotation_info("Basic only rotation", basic_only_rot)
-        print_er_threshold(basic_only_rot, stats.basic,
-                           stats.ult_cost, stats.init_energy)
+        print_er_breakpoint(find_basic_only_rotation, algorithm, all_rotations,
+                            basic_only_rot, stats, user_input,
+                            stats.energy_recharge)
 
     skill_only_rot = find_skill_only_rotation(all_rotations)
     if skill_only_rot:
         print_rotation_info("Skill only rotation", skill_only_rot)
-        print_er_threshold(skill_only_rot, stats.skill,
-                           stats.ult_cost, stats.init_energy)
+        print_er_breakpoint(find_skill_only_rotation, algorithm, all_rotations,
+                            skill_only_rot, stats, user_input,
+                            stats.energy_recharge)
 
     one_skill_rot = find_one_skill_rotation(all_rotations)
     print_rotation_info("One skill rotation", one_skill_rot)
+    print_er_breakpoint(find_one_skill_rotation, algorithm, all_rotations,
+                        one_skill_rot, stats, user_input,
+                        stats.energy_recharge)
 
     print("\n")
 

@@ -1,15 +1,15 @@
 from dataclasses import dataclass
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout
+from ..gui_utils import get_int_from_selector
 from ..widgets import Combobox, TooltipCheckBox, CounterInput, SearchBox
 from .combobox_options_layout import ComboboxOptionsLayout
-from .checkbox_options_layout import CheckboxOptionsLayout
 from .options_layout import OptionsLayout
-from characters import Character, CHARACTERS, CHARACTER_NAMES
-from eidolons import EIDOLONS
-from follow_ups import FOLLOW_UP_ATTACKS
-from talents import TALENTS
-from traces import TRACES
+from character_utils.characters import Character, CHARACTERS, CHARACTER_NAMES
+from character_utils.eidolons import EIDOLONS
+from character_utils.follow_ups import FOLLOW_UP_ATTACKS
+from character_utils.talents import TALENTS
+from character_utils.traces import TRACES
 
 
 @dataclass
@@ -73,6 +73,7 @@ class CharacterSelectorLayout(QGridLayout):
         This includes Eidolons, traces, talents, follow-up attacks and the like."""
 
         char_name = self.char_selector.currentText()
+        eidolon_level = get_int_from_selector(self.eidolons_selector)
         char = CHARACTERS.get(char_name)
         if not char:
             return
@@ -83,7 +84,7 @@ class CharacterSelectorLayout(QGridLayout):
 
         self._enable_ult_kills_input(parent, char)
         self._enable_char_traces(char_name)
-        self._enable_char_talents(char_name)
+        self._enable_char_talents(char_name, eidolon_level)
         self._enable_follow_up_attacks(parent, char_name)
         self._enable_technique_toggle(char)
         self._enable_ally_hits(parent, char_name)
@@ -99,6 +100,10 @@ class CharacterSelectorLayout(QGridLayout):
             options.ult_kills_input.reset_selection()
 
     def _enable_char_traces(self, char_name: str) -> None:
+        """Fetches character specific Traces, and preselects them.
+        If character has no Traces, however, the selection is reset,
+        and the combobox is disabled."""
+
         self.trace_selector.clear()
         self.trace_selector.reset_selection()
 
@@ -107,6 +112,7 @@ class CharacterSelectorLayout(QGridLayout):
         if len(char_traces) > 0:
             self.trace_selector.setEnabled(True)
             self.trace_selector.addItems(char_traces)
+            self.trace_selector.setCurrentText(char_traces[0])
 
         else:
             self.trace_selector.setEnabled(False)
@@ -124,7 +130,7 @@ class CharacterSelectorLayout(QGridLayout):
         else:
             self.eidolons_selector.setEnabled(False)
 
-    def _enable_char_talents(self, char_name: str) -> None:
+    def _enable_char_talents(self, char_name: str, eidolon_level: int) -> None:
         """Enables the option to select the Character's talents if they have them.
         Certain characters cannot increase the level of their talents,
         for them the option to select said level will be disabled."""
@@ -135,12 +141,11 @@ class CharacterSelectorLayout(QGridLayout):
         self.talent_trigger_input.reset_selection()
         talent = TALENTS.get(char_name)
 
-        if not talent:
+        if not talent or char_name == "Welt" and eidolon_level < 2:
             return
 
-        if len(talent.talent_levels) > 1:
-            self.talent_selector.setEnabled(True)
-            self.talent_trigger_input.setEnabled(True)
+        self.talent_selector.setEnabled(True)
+        self.talent_trigger_input.setEnabled(True)
 
     def _enable_follow_up_attacks(self, parent, char_name: str) -> None:
         """Enables the option to select the number of follow-up attacks
@@ -159,6 +164,7 @@ class CharacterSelectorLayout(QGridLayout):
         # Character name, condition for follow up attacks
         follow_up_conditions: dict[str, bool] = {
             "Bronya": eidolon_level >= 4,
+            "Dr. Ratio": True,
             "Herta": True,
             "Himeko": True,
             "Kafka": True,

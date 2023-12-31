@@ -1,7 +1,7 @@
 """This module contains a specific algorithm for Dan Heng Imbibitor Lunae (DHIL)."""
 
-from characters import CharStats
-from support_light_cones import apply_support_lcs
+from character_utils.characters import CharStats
+from equipment_utils.support_light_cones import apply_support_lcs
 from gui_scripts.user_input import UserInput
 from ..detailed_breakdown import print_detailed_breakdown
 from calculation_scripts.rotation import Rotation, RotationList
@@ -17,7 +17,7 @@ def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput) -> RotationList:
     Additionally, DHIL can get stacks through the use of his ultimate or technique
     these stacks can be used instead of regular Skill Points."""
 
-    skill_points_generated = _prep_init_stats(stats, user_input)
+    skill_points_generated = _prep_init_stats(user_input)
     all_rotations = RotationList()
     stack = [(stats.init_energy, [], skill_points_generated)]
 
@@ -30,33 +30,33 @@ def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput) -> RotationList:
             continue
 
         curr_energy = apply_support_lcs(stats, user_input, curr_energy)
-        turn_energy = calculate_turn_energy(stats, user_input)
+        curr_energy += calculate_turn_energy(user_input)
 
         # DHIL uses Basic Attack
-        stack.append((curr_energy + stats.basic + turn_energy,
-                      turns + ["BASIC"], skill_points_generated + 1))
+        stack.append((curr_energy + stats.basic,
+                      turns + ["BASIC"],
+                      skill_points_generated + 1))
 
         # DHIL uses Enhanced Attack 1
-        stack.append((curr_energy + stats.e_basic + turn_energy,
-                      turns + ["EB1"], skill_points_generated - 1))
+        stack.append((curr_energy + stats.e_basic,
+                      turns + ["EB1"],
+                      skill_points_generated - 1))
 
         # DHIL uses Enhanced Attack 2
-        stack.append((curr_energy + stats.e_basic_2 + turn_energy,
-                      turns + ["EB2"], skill_points_generated - 2))
+        stack.append((curr_energy + stats.e_basic_2,
+                      turns + ["EB2"],
+                      skill_points_generated - 2))
 
         # DHIL uses Enhanced Attack 3
-        stack.append((curr_energy + stats.e_basic_3 + turn_energy,
-                      turns + ["EB3"], skill_points_generated - 3))
+        stack.append((curr_energy + stats.e_basic_3,
+                      turns + ["EB3"],
+                      skill_points_generated - 3))
 
     return all_rotations
 
 
-def _prep_init_stats(stats: CharStats, user_input: UserInput) -> int:
-    stats.e_basic = stats.basic + 10 * stats.energy_recharge
-    stats.e_basic_2 = stats.basic + 15 * stats.energy_recharge
-    stats.e_basic_3 = stats.basic + 20 * stats.energy_recharge
-
-    skill_points_generated = 0 + 2 * user_input.assume_ult + 1 * user_input.technique
+def _prep_init_stats(user_input: UserInput) -> int:
+    skill_points_generated = 2 * user_input.assume_ult + 1 * user_input.technique
     if user_input.assume_ult and user_input.eidolon_level >= 2:
         skill_points_generated += 1
 

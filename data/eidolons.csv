@@ -4,6 +4,8 @@ Asta,4,energy_recharge,15
 Blade,6,,0
 Bronya,4,,0
 Clara,6,,0
+Dr. Ratio,4,follow-up,15
+Dr. Ratio,6,,0
 Fu Xuan,4,,5
 Jing Yuan,4,lightning_lord,2
 Jingliu,6,,0
@@ -17,6 +19,7 @@ Serval,2,serval,4
 Silver Wolf,1,ult_act,35
 Topaz,2,follow-up,5
 Trailblazer (Destruction),1,ult_kill,10
+Welt,2,,0
 Welt,6,skill,10
 Yangqing,2,energy_recharge,10
 Yukong,6,yukong_e6,2

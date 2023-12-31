@@ -61,7 +61,7 @@ Your feedback, suggestions, and bug reports are very much appreciated! If you en
 
 ## Changelog
 
-Please note that you can check the changelog [_here_]((https://github.com/djordje-kalojevic/HSR-Optimal-Rotation-Calculator/tree/changelog.md)) to more easily keep track of changes you're interested in (use "ctrl + f" for easier search).
+Please note that you can check the changelog [here](https://github.com/djordje-kalojevic/HSR-Optimal-Rotation-Calculator/tree/changelog.md) to more easily keep track of changes you're interested in (use "ctrl + f" for easier search).
 
 ---
 

@@ -4,5 +4,5 @@ PyQt6==6.6.1
 PyQt6-Qt6==6.6.1
 PyQt6-sip==13.6.0
 pyqtdarktheme==2.1.0
-rbloom==1.4.5
+rbloom==1.5.0
 termcolor==2.4.0

@@ -5,7 +5,6 @@ and storing them."""
 
 from dataclasses import dataclass
 from csv import DictReader
-
 from character_utils.characters import CharStats
 
 

@@ -17,7 +17,7 @@ def dfs_algorithm_luka(stats: CharStats, user_input: UserInput) -> RotationList:
                                                                         user_input)
     e_basic_cost = 2
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0, luka_stacks)]
+    stack = [(stats.init_energy, [], stats.init_sp, luka_stacks)]
 
     while stack:
         curr_energy, turns, skill_points_generated, luka_stacks = stack.pop()

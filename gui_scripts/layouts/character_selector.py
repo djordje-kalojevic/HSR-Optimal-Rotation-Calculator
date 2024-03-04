@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QGridLayout, QHBoxLayout
 from ..gui_utils import get_int_from_selector
-from ..widgets import Combobox, TooltipCheckBox, CounterInput, SearchBox
+from ..widgets import Combobox, Tooltip, TooltipCheckBox, CounterInput, SearchBox
+from .enemy_info_layout import EnemyInfoLayout
 from .combobox_options_layout import ComboboxOptionsLayout
 from .options_layout import OptionsLayout
 from character_utils.characters import Character, CHARACTERS, CHARACTER_NAMES
@@ -49,6 +50,15 @@ class CharacterSelectorLayout(QGridLayout):
         self.follow_up_selector = CounterInput("Follow-ups:", parent)
         self.follow_up_selector.label.setMinimumWidth(110)
         self.follow_up_selector.setEnabled(False)
+        self.follow_up_tooltip = Tooltip(
+            text=(("Please note that Topaz's follow-up attacks after her Ultimate, "
+                   "are already included, this is for adding any additional such attacks.")))
+        self.follow_up_tooltip.setEnabled(False)
+
+        self.follow_up_input = QGridLayout()
+        self.follow_up_input.addWidget(self.follow_up_selector, 0, 0, 1, 1)
+        self.follow_up_input.addWidget(self.follow_up_tooltip, 0, 1, 1, 1)
+        self.follow_up_input.setSpacing(0)
 
         self.technique_check = TooltipCheckBox(
             parent, label="Technique?",
@@ -62,7 +72,7 @@ class CharacterSelectorLayout(QGridLayout):
         self.addWidget(self.char_selector, 1, 0)
         self.addLayout(horizontal_layout, 1, 2)
         self.addWidget(self.trace_selector, 2, 0)
-        self.addWidget(self.follow_up_selector, 2, 2,
+        self.addLayout(self.follow_up_input, 2, 2,
                        alignment=Qt.AlignmentFlag.AlignLeft)
         self.addWidget(self.talent_selector, 3, 0)
         self.addWidget(self.talent_trigger_input, 3, 2,
@@ -87,6 +97,7 @@ class CharacterSelectorLayout(QGridLayout):
         self._enable_char_talents(char_name, eidolon_level)
         self._enable_follow_up_attacks(parent, char_name)
         self._enable_technique_toggle(char)
+        self._enable_enemy_weakness(parent, char_name)
         self._enable_ally_hits(parent, char_name)
         self._enable_huohuo_ult(parent, char_name)
 
@@ -109,6 +120,7 @@ class CharacterSelectorLayout(QGridLayout):
 
         char_traces = [a.name for a in TRACES.values()
                        if a.char_name == char_name]
+
         if len(char_traces) > 0:
             self.trace_selector.setEnabled(True)
             self.trace_selector.addItems(char_traces)
@@ -127,6 +139,7 @@ class CharacterSelectorLayout(QGridLayout):
         if char_eidolons:
             self.eidolons_selector.setEnabled(True)
             self.eidolons_selector.addItems(char_eidolons)
+
         else:
             self.eidolons_selector.setEnabled(False)
 
@@ -157,12 +170,14 @@ class CharacterSelectorLayout(QGridLayout):
 
         self.follow_up_selector.reset_selection()
         self.follow_up_selector.setEnabled(False)
+        self.follow_up_tooltip.setEnabled(False)
 
-        if not FOLLOW_UP_ATTACKS.get(char_name) or char_name == "Blade":
+        if not FOLLOW_UP_ATTACKS.get(char_name):
             return
 
         # Character name, condition for follow up attacks
         follow_up_conditions: dict[str, bool] = {
+            "Blade": False,
             "Bronya": eidolon_level >= 4,
             "Dr. Ratio": True,
             "Herta": True,
@@ -173,8 +188,9 @@ class CharacterSelectorLayout(QGridLayout):
             "Yanqing": True
         }
 
-        if follow_up_conditions.get((char_name)):
+        if follow_up_conditions.get(char_name):
             self.follow_up_selector.setEnabled(True)
+            self.follow_up_tooltip.setEnabled(True)
 
     def _enable_technique_toggle(self, char: Character) -> None:
         """Enables the option to toggle the Character's technique if they have one."""
@@ -185,6 +201,16 @@ class CharacterSelectorLayout(QGridLayout):
             self.technique_check.reset_selection()
             self.technique_check.setEnabled(False)
 
+    def _enable_enemy_weakness(self, parent, char_name: str) -> None:
+        """Enables the option to toggle the enemy's elemental weakness 
+        so that it matches character's element.
+        Currently only Luka benefits from this."""
+
+        enemy_info_layout: EnemyInfoLayout = parent.enemy_info_layout
+        enemy_info_layout.enemy_weakness.setEnabled(False)
+        if char_name == "Luka":
+            enemy_info_layout.enemy_weakness.setEnabled(True)
+
     def _enable_ally_hits(self, parent, char_name: str) -> None:
         """Enables the option to select the number of times an ally was hit
         for characters that gain a bonus when that happens."""
@@ -192,10 +218,12 @@ class CharacterSelectorLayout(QGridLayout):
         eidolon_level: int = parent.get_eidolon_level()
         options: OptionsLayout = parent.options_layout
         ally_hit_cb: CounterInput = options.combo_boxes.ally_hits_taken_cb
+        ally_hit_tooltip: Tooltip = options.combo_boxes.ally_hits_taken_tooltip
         ult_assumed: bool = options.check_boxes.assume_ult.checkbox.isChecked()
 
         ally_hit_cb.reset_selection()
         ally_hit_cb.setEnabled(False)
+        ally_hit_tooltip.setEnabled(False)
 
         # Character name, condition for ally hit bonuses, maximum input
         default_options = 10
@@ -210,8 +238,13 @@ class CharacterSelectorLayout(QGridLayout):
         if maximum_input:
             ally_hit_cb.spin_box.setMaximum(maximum_input)
             ally_hit_cb.setEnabled(True)
+            ally_hit_tooltip.setEnabled(True)
 
     def _enable_huohuo_ult(self, parent, char_name: str) -> None:
+        """Enables the option to select the level of HuoHuo's ultimate used, 
+        note that this ultimate does not generate energy for HuoHuo herself, 
+        thus the option is disabled for her."""
+
         options: ComboboxOptionsLayout = parent.options_layout.combo_boxes
         if char_name != "HuoHuo":
             options.huohuo_ult_input.setEnabled(True)

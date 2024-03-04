@@ -24,7 +24,7 @@ class LightCone:
     bonus: float = 0
     energy_values: list[float] = field(default_factory=lambda: [])
     triggered: bool = False
-    trigger = Counter()
+    trigger: Counter = field(default_factory=Counter)
 
     def update_lc_bonus(self) -> None:
         self.bonus = self.energy_values[self.superimposition]

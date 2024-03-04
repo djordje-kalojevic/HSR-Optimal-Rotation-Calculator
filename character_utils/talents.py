@@ -54,8 +54,8 @@ def _read_talents() -> dict[str, Talent]:
             talent_name = row["talent_name"]
             talent_levels = [row[f"Level {i}"] for i in range(1, 16)]
             talent_levels = [float(value) for value in talent_levels if value]
-            talent = Talent(char_name, talent_name, talent_levels)
 
+            talent = Talent(char_name, talent_name, talent_levels)
             talents[char_name] = talent
 
     return talents
@@ -67,7 +67,7 @@ def apply_talents(stats: CharStats, talent: Optional[Talent]):
 
     match talent.char_name:
         case "Clara":
-            follow_up_attack_check(talent.char_name)
+            follow_up_attack_check(stats, talent.char_name)
             stats.get_hit += stats.follow_up
         case "Pela":
             stats.ult_act += talent.energy

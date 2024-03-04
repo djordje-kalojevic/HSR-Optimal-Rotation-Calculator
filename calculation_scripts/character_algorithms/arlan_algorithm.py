@@ -11,7 +11,7 @@ def dfs_algorithm_arlan(stats: CharStats, user_input: UserInput) -> RotationList
     """Arlan does not use Skill Points for his skill."""
 
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0)]
+    stack = [(stats.init_energy, [], stats.init_sp)]
 
     while stack:
         curr_energy, turns, skill_points_generated = stack.pop()

@@ -16,7 +16,7 @@ def dfs_algorithm_fire_mc(stats: CharStats, user_input: UserInput) -> RotationLi
 
     e_basic_cost, fire_mc_stacks = _prep_init_stats(user_input)
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0, fire_mc_stacks)]
+    stack = [(stats.init_energy, [], stats.init_sp, fire_mc_stacks)]
 
     while stack:
         curr_energy, turns, skill_points_generated, fire_mc_stacks = stack.pop()

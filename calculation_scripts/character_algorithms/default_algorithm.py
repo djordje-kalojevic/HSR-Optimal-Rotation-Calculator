@@ -22,7 +22,7 @@ def dfs_algorithm_default(stats: CharStats, user_input: UserInput) -> RotationLi
     as the former generate skill points, and the latter consume them."""
 
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0)]
+    stack = [(stats.init_energy, [], stats.init_sp)]
 
     while stack:
         curr_energy, turns, skill_points_generated = stack.pop()

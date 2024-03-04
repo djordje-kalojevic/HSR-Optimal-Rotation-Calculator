@@ -20,9 +20,9 @@ class ComboboxOptionsLayout(QGridLayout):
             text=("Energy gained when ally gets hit. "
                   "Note that for Lynx to benefit from this ally must have Lynx's "
                   '"Survival Response" (continues healing effect) applied to them.'))
+        self.ally_hits_taken_tooltip.setEnabled(False)
 
-        self.kills_input = CounterInput(
-            "Kills:                      ", parent)
+        self.kills_input = CounterInput("Kills:                      ", parent)
 
         self.ult_kills_input = CounterInput("Ult Kills:                ", parent,
                                             show_checkbox=False)
@@ -33,14 +33,16 @@ class ComboboxOptionsLayout(QGridLayout):
         self.huohuo_ult_input.setEnabled(False)
 
         self.hits_taken_input = QGridLayout()
-        self.hits_taken_input.addWidget(self.hits_taken_cb, 0, 0, 1, 10)
-        self.hits_taken_input.addWidget(self.hits_taken_tooltip, 0, 10, 1, 1)
+        self.hits_taken_input.addWidget(self.hits_taken_cb, 0, 0, 1, 1)
+        self.hits_taken_input.addWidget(self.hits_taken_tooltip, 0, 1, 1, 1)
+        self.hits_taken_input.setSpacing(0)
 
         self.ally_hits_taken_input = QGridLayout()
         self.ally_hits_taken_input.addWidget(self.ally_hits_taken_cb,
-                                             0, 0, 1, 10)
+                                             0, 0, 1, 1)
         self.ally_hits_taken_input.addWidget(self.ally_hits_taken_tooltip,
-                                             0, 10, 1, 1)
+                                             0, 1, 1, 1)
+        self.ally_hits_taken_input.setSpacing(0)
 
         self.addWidget(self.kills_input, 0, 0, 1, 1)
         self.addWidget(QWidget(), 0, 1, 1, 1)

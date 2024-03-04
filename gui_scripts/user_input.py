@@ -15,19 +15,19 @@ class UserInput:
     char_name: str = ""
     eidolon_level: int = 0
     talent: Optional[Talent] = None
-    talent_triggers = Counter()
+    talent_triggers: Counter = field(default_factory=Counter)
     technique: bool = False
     trace: str = ""
     light_cone: Optional[LightCone] = None
     support_light_cone: Optional[LightCone] = None
     relic: Optional[Relic] = None
-    relic_trigger = Counter()
+    relic_trigger: Counter = field(default_factory=Counter)
     ornament: str = ""
     rope: str = ""
-    hits_taken = Counter()
-    ally_hits_taken = Counter()
-    follow_ups = Counter()
-    kills = Counter()
+    hits_taken: Counter = field(default_factory=Counter)
+    ally_hits_taken: Counter = field(default_factory=Counter)
+    follow_ups: Counter = field(default_factory=Counter)
+    kills: Counter = field(default_factory=Counter)
     num_ult_kills: int = 0
     assume_ult: bool = False
     assume_tingyun_ult: bool = False
@@ -40,7 +40,7 @@ class UserInput:
     counters: dict[str, Counter] = field(init=False, default_factory=dict)
     active_counters: bool | str = None
 
-    def cache(self, cache_name: str) -> None:
+    def cache(self, cache_name="") -> None:
         """Stores the current values of various counters,
         as they can get changed during calculation.\n
         At the moment, cache_name is there only to explain
@@ -49,7 +49,7 @@ class UserInput:
         for counter in self.counters.values():
             counter.cache()
 
-    def retrieve_cache(self, cache_name: str) -> None:
+    def retrieve_cache(self, cache_name="") -> None:
         """Retrieves the stored user's inputs.
         Useful for reverting the changes made during the calculation,
         especially changes to the various counters."""

@@ -1,9 +1,11 @@
 char_name,eidolon_level,eidolon_type,energy_value
 Asta,1,skill,6
 Asta,4,energy_recharge,15
+Black Swan,4,ult_act,8
 Blade,6,,0
 Bronya,4,,0
 Clara,6,,0
+Dan Heng IL,2,sp_generation,1
 Dr. Ratio,4,follow-up,15
 Dr. Ratio,6,,0
 Fu Xuan,4,,5
@@ -17,7 +19,9 @@ Sampo,1,skill,6
 Seele,4,kill,15
 Serval,2,serval,4
 Silver Wolf,1,ult_act,35
+Sparkle,4,sp_generation,1
 Topaz,2,follow-up,5
+Topaz,6,,0
 Trailblazer (Destruction),1,ult_kill,10
 Welt,2,,0
 Welt,6,skill,10

@@ -10,7 +10,7 @@ from calculation_scripts.calculations_utils import calculate_turn_energy
 def dfs_algorithm_topaz(stats: CharStats, user_input: UserInput) -> RotationList:
     numby_bonus_energy, numby_triggers = _prep_init_stats(stats, user_input)
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0)]
+    stack = [(stats.init_energy, [], stats.init_sp)]
 
     while stack:
         curr_energy, turns, skill_points_generated = stack.pop()
@@ -44,10 +44,16 @@ def _prep_init_stats(stats: CharStats, user_input: UserInput) -> tuple[float, in
     if user_input.technique:
         stats.init_energy += 60 * stats.energy_recharge
 
-    numby_bonus_energy = 10
-    if user_input.eidolon_level >= 2:
-        numby_bonus_energy += 5
+    numby_bonus_energy = stats.follow_up
+    if user_input.trace:
+        numby_bonus_energy = stats.follow_up + 10 * stats.energy_recharge
 
-    num_numby_triggers = 2 if user_input.assume_ult else 0
+    num_numby_triggers = 0
 
-    return numby_bonus_energy * stats.energy_recharge, num_numby_triggers
+    if user_input.assume_ult:
+        num_numby_triggers = 2
+
+        if user_input.eidolon_level == 6:
+            num_numby_triggers += 1
+
+    return numby_bonus_energy, num_numby_triggers

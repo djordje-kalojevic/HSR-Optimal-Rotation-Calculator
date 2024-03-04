@@ -17,7 +17,7 @@ def dfs_algorithm_jingliu(stats: CharStats, user_input: UserInput) -> RotationLi
     syzygy_stacks = _prep_init_stats(stats, user_input)
     buffed_state = False
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0, syzygy_stacks)]
+    stack = [(stats.init_energy, [], stats.init_sp, syzygy_stacks)]
 
     while stack:
         curr_energy, turns, skill_points_generated, syzygy_stacks = stack.pop()

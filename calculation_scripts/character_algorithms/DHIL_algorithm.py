@@ -17,9 +17,8 @@ def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput) -> RotationList:
     Additionally, DHIL can get stacks through the use of his ultimate or technique
     these stacks can be used instead of regular Skill Points."""
 
-    skill_points_generated = _prep_init_stats(user_input)
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], skill_points_generated)]
+    stack = [(stats.init_energy, [], stats.init_sp)]
 
     while stack:
         curr_energy, turns, skill_points_generated = stack.pop()
@@ -53,14 +52,6 @@ def dfs_algorithm_dhil(stats: CharStats, user_input: UserInput) -> RotationList:
                       skill_points_generated - 3))
 
     return all_rotations
-
-
-def _prep_init_stats(user_input: UserInput) -> int:
-    skill_points_generated = 2 * user_input.assume_ult + 1 * user_input.technique
-    if user_input.assume_ult and user_input.eidolon_level >= 2:
-        skill_points_generated += 1
-
-    return skill_points_generated
 
 
 def print_results_dhil(stats: CharStats, user_input: UserInput,

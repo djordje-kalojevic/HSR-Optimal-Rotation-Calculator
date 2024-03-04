@@ -40,8 +40,8 @@ class Combobox(QComboBox):
 class Tooltip(QLabel):
     """Custom tooltip widget."""
 
-    def __init__(self, parent=None, text="", icon_size=QSize(16, 16)):
-        super().__init__(parent)
+    def __init__(self, text="", icon_size=QSize(16, 16)):
+        super().__init__()
 
         self.setToolTip(text)
         pixmap_name = QStyle.StandardPixmap.SP_MessageBoxQuestion
@@ -69,7 +69,7 @@ class TooltipCheckBox(QWidget):
         form_layout = QFormLayout()
         self.checkbox = QCheckBox(label)
         self.checkbox.setChecked(checked)
-        self.tooltip = Tooltip(parent, tooltip_text, icon_size)
+        self.tooltip = Tooltip(tooltip_text, icon_size)
 
         form_layout.addRow(self.checkbox, self.tooltip)
         form_layout.setContentsMargins(form_layout.contentsMargins().left(), 0,

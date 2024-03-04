@@ -19,7 +19,7 @@ def determine_initial_energy(stats: CharStats, user_input: UserInput) -> None:
             stats.init_energy += 15
 
     elif user_input.char_name == "Dr. Ratio" and user_input.assume_ult:
-        stats.init_energy += 2 * stats.follow_up + stats.follow_up
+        stats.init_energy += 2 * stats.follow_up
         if user_input.eidolon_level == 6:
             stats.init_energy += stats.follow_up
 
@@ -34,6 +34,35 @@ def determine_initial_energy(stats: CharStats, user_input: UserInput) -> None:
 
     if user_input.num_ult_kills > 0:
         stats.init_energy += user_input.num_ult_kills * stats.ult_kill
+
+
+def determine_initial_skill_points(stats: CharStats, user_input: UserInput) -> None:
+    """Determines and returns the initial number of skill points,
+    this is useful for characters who can generate them
+    outside of their attacks like Sparkle and Dan Heng IL.
+    Or characters who can leverage the "But the Battle Isn't Over Light Cone."""
+
+    if user_input.technique:
+        if user_input.char_name == "Dan Heng IL":
+            stats.init_sp += 1
+
+        elif user_input.char_name == "Sparkle":
+            stats.init_sp += 3
+
+    if user_input.assume_ult:
+        if user_input.char_name == "Dan Heng IL":
+            stats.init_sp += 2
+            if user_input.eidolon_level >= 2:
+                stats.init_sp += 1
+
+        elif user_input.char_name == "Sparkle":
+            stats.init_sp += 4
+            if user_input.eidolon_level >= 4:
+                stats.init_sp += 1
+
+        if (not stats.is_ult_attack and user_input.light_cone
+                and user_input.light_cone.name == "But the Battle Isn't Over"):
+            stats.init_sp += 1
 
 
 def find_basic_only_rotation(rotations: RotationList) -> Optional[Rotation]:
@@ -145,7 +174,7 @@ def print_char_info(stats: CharStats, user_input: UserInput) -> None:
         char_info += f" and {trace_unlock_level}"
 
     if user_input.technique:
-        char_info += f" + technique"
+        char_info += " + technique"
 
     print(colored(char_info, "green"))
 

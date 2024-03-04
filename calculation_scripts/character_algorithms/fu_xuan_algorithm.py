@@ -13,7 +13,7 @@ def dfs_algorithm_fx(stats: CharStats, user_input: UserInput) -> RotationList:
 
     matrix_duration = _prep_init_stats(user_input)
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0, matrix_duration)]
+    stack = [(stats.init_energy, [], stats.init_sp, matrix_duration)]
 
     while stack:
         curr_energy, turns, skill_points_generated, matrix_duration = stack.pop()

@@ -10,7 +10,7 @@ from calculation_scripts.calculations_utils import calculate_turn_energy
 def dfs_algorithm_argenti(stats: CharStats, user_input: UserInput) -> RotationList:
 
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0)]
+    stack = [(stats.init_energy, [], stats.init_sp)]
 
     while stack:
         curr_energy, turns, skill_points_generated = stack.pop()
@@ -48,4 +48,6 @@ def print_results_argenti(stats: CharStats, user_input: UserInput,
     stats.cache("before-er-application")
 
     unique_rotations = dfs_algorithm_argenti(stats, user_input)
+    unique_rotations.process_rotation_data(user_input.char_name)
+
     print_results_default(stats, user_input, unique_rotations, algorithm)

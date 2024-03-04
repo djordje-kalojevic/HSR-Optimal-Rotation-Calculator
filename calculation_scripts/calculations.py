@@ -26,8 +26,10 @@ from equipment_utils.light_cones import apply_light_cones
 from equipment_utils.relics import apply_ornament, apply_rope
 from gui_scripts.user_input import UserInput
 from .character_algorithms.all_algorithms import apply_correct_algorithm, print_results
-from .calculations_utils import (determine_ally_hit_energy, determine_initial_energy,
-                                 determine_counter_energy_values, derive_special_action_values)
+from .calculations_utils import (
+    determine_ally_hit_energy, determine_initial_skill_points,
+    determine_initial_energy, determine_counter_energy_values,
+    derive_special_action_values)
 
 
 def run_calculations(stats: CharStats, user_input: UserInput) -> None:
@@ -57,6 +59,7 @@ def _apply_bonuses(stats: CharStats, user_input: UserInput) -> None:
     determine_ally_hit_energy(stats, user_input)
     derive_special_action_values(stats, user_input)
     determine_initial_energy(stats, user_input)
+    determine_initial_skill_points(stats, user_input)
 
     stats.apply_energy_recharge(stats.energy_recharge)
 

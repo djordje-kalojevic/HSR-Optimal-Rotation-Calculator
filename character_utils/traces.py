@@ -42,6 +42,8 @@ def apply_traces(stats: CharStats, trace_name: str = "") -> None:
     value_bonus = trace.value_bonus
 
     match trace.type:
+        case "basic":
+            stats.basic += value_bonus
         case "battle_start":
             stats.init_energy += value_bonus
         case "ult_act":
@@ -70,8 +72,7 @@ def _read_traces() -> dict[str, Trace]:
             type = row["trace_type"]
             value_bonus = int(row["value"])
 
-            trace = Trace(char_name, name,
-                          type, value_bonus)
+            trace = Trace(char_name, name, type, value_bonus)
             traces[name] = trace
 
     return traces

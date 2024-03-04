@@ -1,40 +1,78 @@
+## v2.0
+
+### **New characters:**
+
+- Black Swan, E4 assumes one activation per Ultimate
+- Sparkle
+- Misha
+
+### **Additions:**
+
+- Added Dan Heng IL's missing E2
+- Added the "But the Battle Isn't Over" Light Cone's missing effect: "regenerates 1 Skill Point when the wearer uses their Ultimate on an ally"
+
+### **GUI:**
+
+- Tooltips icons now accurately reflect the enabled/disabled state of the widget they are attached to
+- Option to toggle on Matching Enemy Weakness is now reserved only for Luka. Additionally, corrected the misspelled label
+
+### **Fixes:**
+
+- Fixed a crash that would occur when attempting calculations using any Support Light Cones  
+  (thank you to @rasperin for finding it and for providing a fix!)
+- Fixed numerous issues with Topaz's calculations. For more information please refer to this [issue](https://github.com/djordje-kalojevic/HSR-Optimal-Rotation-Calculator/issues/13).  
+  (thank you to @ProtoJ17 for reporting it!)
+- Fixed instances of Argenti's 90 energy mode displaying unformatted data, e.g., it would show rotations as "BASIC BASIC BASIC BASIC" instead of "4 x BASIC".
+- This also lead to incorrect Energy Recharge and SP/turn calculations
+- Corrected Dr. Ratio's Ultimate applying 3 follow-ups instead of 2 (and 4 with Eidolon 6 instead of 3).
+- Given that any character, including himself, can trigger these follow-up, it is assumed that they are triggered in a single turn.
+- Corrected the maximum number of enemies from 6 to 5
+
 ## v1.6
 
 ### **New characters:**
+
 - Ruan Mei
 - Dr. Ratio, note that 2 follow-ups (3 with E6), are included when the “Assume Ultimate Activation” is toggled
 - Xueyi
 
 ### **Equipment:**
+
 - Ruan Mei's Light Cone, “Past Self in Mirror”
 
 ### **Other Additions:**
+
 - Added Himeko's missing +5 energy on Ultimate kills
 - Added Welt's missing E2
 
 ### **Corrected Energy Recharge breakpoint accuracy:**
+
 - Using a Binary Search Algorithm, a precise ER breakpoint is being pinpointed.
 - Max ER checked is 200% to give some leeway for any future ER-related additions.
 - Note that this feature is marked as being in “BETA”, this is purely due to the fact that there are so many combinations, and I am not able to check them all.
 
 ### **Other improvements:**
+
 - Rewrote and sped up Jingliu's rotations by almost 10x
 - added [changelog](https://github.com/djordje-kalojevic/HSR-Optimal-Rotation-Calculator/blob/master/changelog.md) for easier tracking of changes (use "ctrl + f" to search).
 - Traces are now pre-selected
 - removed Trace names from the character info banners, as they are getting ridiculously long (looking at you Ruan Mei!), now they will only display the ascension at which the trace unlocks, i.e., A2, A4 or A6
 
 ### **Fixes:**
+
 - Removed the possibility of HuoHuo's Ultimate being affected by Energy Recharge
 - fixed instances of Enhanced Attacks not showing in the Detailed Energy Breakdown, most notably with Blade
 - fixed instances of single occurrences (i.e., a single Follow-up attack) not showing in the Detailed Energy Breakdown
 
 ### **Code Improvements:**
+
 - simplified Calculate Turn Energy function significantly
 - simplified and sped up the cache function of the UserInput class
 - removed white theme, and simplified theme application
 - other code and documentation improvements
 
-### **Known issues/limitations:****
+### **Known issues/limitations:**
+
 - For example, if you specify 6 follow-up attacks (1 per turn) but the rotation is, however, only 5 turns long, the Detailed Breakdown will still show 6 follow-up attacks.
 - Missing E2 Tingyun team buff
 - Missing E1 Bailu team buff

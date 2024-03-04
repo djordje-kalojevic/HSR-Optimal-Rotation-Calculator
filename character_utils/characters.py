@@ -33,6 +33,7 @@ class CharStats:
     ult_kill: float = 10
     ult_act: float = 5
     init_energy: float = 0
+    init_sp: int = 0
     is_skill_attack: bool = False
     is_ult_attack: bool = False
     _caches: dict[str, dict] = field(init=False, default_factory=dict)

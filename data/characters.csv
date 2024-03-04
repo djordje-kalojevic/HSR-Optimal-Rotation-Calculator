@@ -1,19 +1,20 @@
 name,path,ult_cost,is_skill_attack,is_ult_attack,has_technique
+Acheron,Nihility,0,,,
 Argenti,Erudition,180,TRUE,TRUE,TRUE
 Arlan,Destruction,110,TRUE,TRUE,
 Asta,Harmony,120,TRUE,,
 Bailu,Abundance,100,,,
-Black Swan,Nihility,0,,,
+Black Swan,Nihility,120,TRUE,TRUE,
 Blade,Destruction,130,,TRUE,TRUE
 Bronya,Harmony,120,,,
 Clara,Destruction,110,TRUE,,
 Dan Heng,Hunt,100,TRUE,TRUE,
 Dan Heng IL,Destruction,140,,TRUE,TRUE
-Dr. Ratio,Hunt,140,TRUE,TRUE,,
+Dr. Ratio,Hunt,140,TRUE,TRUE,
 Fu Xuan,Preservation,135,,TRUE,TRUE
 Gepard,Preservation,100,TRUE,,
 Guinaifen,Nihility,120,TRUE,TRUE,
-Hanya,Harmony,140,TRUE,FALSE,
+Hanya,Harmony,140,TRUE,,
 Herta,Erudition,110,TRUE,TRUE,
 Himeko,Erudition,120,TRUE,TRUE,
 Hook,Destruction,120,TRUE,TRUE,
@@ -25,22 +26,22 @@ Luka,Nihility,130,TRUE,TRUE,TRUE
 Luocha,Abundance,100,,TRUE,
 Lynx,Abundance,100,,,
 March 7th,Preservation,120,,TRUE,
-Misha,Destruction,0,,,
+Misha,Destruction,100,TRUE,TRUE,
 Natasha,Abundance,90,,,
 Pela,Nihility,110,TRUE,TRUE,
-Ruan Mei,Harmony,130,,,TRUE
 Qingque,Erudition,140,,TRUE,
+Ruan Mei,Harmony,130,,,TRUE
 Sampo,Nihility,120,TRUE,TRUE,
 Seele,Hunt,120,TRUE,TRUE,
 Serval,Erudition,100,TRUE,TRUE,
 Silver Wolf,Nihility,110,TRUE,TRUE,
+Sparkle,Harmony,110,,,TRUE
 Sushang,Hunt,120,TRUE,TRUE,
-Sparkle,Harmony,0,,,
 Tingyun,Harmony,130,,,
 Topaz,Hunt,130,TRUE,,TRUE
 Trailblazer (Destruction),Destruction,120,TRUE,TRUE,
 Trailblazer (Preservation),Preservation,120,,TRUE,
 Welt,Nihility,120,TRUE,TRUE,
-Xueyi,Destruction,120,TRUE,TRUE,,
+Xueyi,Destruction,120,TRUE,TRUE,
 Yanqing,Hunt,140,TRUE,TRUE,
 Yukong,Harmony,90,,TRUE,

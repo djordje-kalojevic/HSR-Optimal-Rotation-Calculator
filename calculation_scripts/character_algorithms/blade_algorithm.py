@@ -19,7 +19,7 @@ def dfs_algorithm_blade(stats: CharStats, user_input: UserInput) -> RotationList
 
     follow_up_cost, blade_stacks = _prep_init_stats(user_input)
     all_rotations = RotationList()
-    stack = [(stats.init_energy, [], 0, 0, blade_stacks)]
+    stack = [(stats.init_energy, [], stats.init_sp, 0, blade_stacks)]
 
     while stack:
         curr_energy, turns, skill_points_generated, e_basic_charges, blade_stacks = stack.pop()
